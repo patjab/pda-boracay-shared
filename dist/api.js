@@ -1,53 +1,65 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApiConstants = void 0;
+// API endpoints. Each REST API is fronted by a stable per-frontend custom domain
+// with an EMPTY base path (e.g. public-api.pdaboracay.com), so the request path
+// the Lambda sees stays `/events/…` (no base-path prefix — a base path would be
+// left in event.path and break the Lambdas' path-based routing). This keeps the
+// volatile execute-api IDs out of the UIs (resolves pda-boracay-cdk#2).
+// faces-control is the v2 control API on its own domain. survey / moments(-official)
+// / faces box are already stable.
+const PUBLIC_API = 'https://public-api.pdaboracay.com';
+const ADMIN_API = 'https://admin-api.pdaboracay.com';
+const RESERVATIONS_API = 'https://reservations-api.pdaboracay.com';
+const SAVETHEDATE_API = 'https://savethedate-api.pdaboracay.com';
+const SHARE_API = 'https://share-api.pdaboracay.com';
 exports.ApiConstants = {
     // Invites
-    GET_ALL_INVITES: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/invite?userId=lakandula',
-    GET_INVITE: 'https://s05qxqhozf.execute-api.us-east-1.amazonaws.com/production/invite',
-    CREATE_INVITES_BY_CSV_UPLOAD: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/scramble',
-    INCREMENT_COUNT_OF_INVITE_SENT: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/scramble/increment',
+    GET_ALL_INVITES: `${ADMIN_API}/invite?userId=lakandula`,
+    GET_INVITE: `${PUBLIC_API}/invite`,
+    CREATE_INVITES_BY_CSV_UPLOAD: `${ADMIN_API}/scramble`,
+    INCREMENT_COUNT_OF_INVITE_SENT: `${ADMIN_API}/scramble/increment`,
     // RSVP
-    GET_RSVPS: 'https://s4j7d5e84f.execute-api.us-east-1.amazonaws.com/production/rsvp',
+    GET_RSVPS: `${RESERVATIONS_API}/rsvp`,
     // Organizer / admin data
-    GET_AND_PUT_ADMIN_ADDED_DATA_TO_RSVPS: 'https://s4j7d5e84f.execute-api.us-east-1.amazonaws.com/production/organize',
+    GET_AND_PUT_ADMIN_ADDED_DATA_TO_RSVPS: `${RESERVATIONS_API}/organize`,
     // Pre-checkins (reservations)
-    GET_PRECHECKINS: 'https://s4j7d5e84f.execute-api.us-east-1.amazonaws.com/production/pda-boracay-precheckins',
+    GET_PRECHECKINS: `${RESERVATIONS_API}/pda-boracay-precheckins`,
     // OTP login (reservations)
-    SEND_CODE: 'https://s4j7d5e84f.execute-api.us-east-1.amazonaws.com/production/send-code',
-    VERIFY_CODE: 'https://s4j7d5e84f.execute-api.us-east-1.amazonaws.com/production/verify-code',
+    SEND_CODE: `${RESERVATIONS_API}/send-code`,
+    VERIFY_CODE: `${RESERVATIONS_API}/verify-code`,
     // Save the date
-    GET_SAVE_THE_DATE_RECORDS: 'https://yueask9uzc.execute-api.us-east-1.amazonaws.com/production/records',
-    SAVE_THE_DATE_RECORD: 'https://yueask9uzc.execute-api.us-east-1.amazonaws.com/production/record',
-    GUEST_AUTH: 'https://yueask9uzc.execute-api.us-east-1.amazonaws.com/production/guest?guest=',
-    // Surveys (survey app)
+    GET_SAVE_THE_DATE_RECORDS: `${SAVETHEDATE_API}/records`,
+    SAVE_THE_DATE_RECORD: `${SAVETHEDATE_API}/record`,
+    GUEST_AUTH: `${SAVETHEDATE_API}/guest?guest=`,
+    // Surveys (survey app — already on its own stable domain)
     GET_ALL_SURVEYS: 'https://survey.pdaboracay.com/surveys',
     GET_SURVEY_COUNTS: 'https://survey.pdaboracay.com/surveys/count',
-    // IP tracking
-    GET_IP_ADDRESSES: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production',
+    // IP tracking (admin API root)
+    GET_IP_ADDRESSES: `${ADMIN_API}`,
     // Admin auth
-    LOGIN: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/login',
+    LOGIN: `${ADMIN_API}/login`,
     // Admin events config
-    ADMIN_EVENTS: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/events',
+    ADMIN_EVENTS: `${ADMIN_API}/events`,
     // Admin email templates
-    TEMPLATES: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/templates',
-    EMAIL_TEMPLATE: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/email-template',
+    TEMPLATES: `${ADMIN_API}/templates`,
+    EMAIL_TEMPLATE: `${ADMIN_API}/email-template`,
     // Guestbook wishes
-    WISHES: 'https://s05qxqhozf.execute-api.us-east-1.amazonaws.com/production/wishes',
+    WISHES: `${PUBLIC_API}/wishes`,
     // Events (dynamic app config)
-    EVENTS: 'https://s05qxqhozf.execute-api.us-east-1.amazonaws.com/production/events',
+    EVENTS: `${PUBLIC_API}/events`,
     // Visit analytics
-    SURVEY: 'https://s05qxqhozf.execute-api.us-east-1.amazonaws.com/production/survey',
+    SURVEY: `${PUBLIC_API}/survey`,
     // Media upload (share app)
-    INITIATE_UPLOAD: 'https://fj7gzz4jjg.execute-api.us-east-1.amazonaws.com/production/initiate',
-    COMPLETE_UPLOAD: 'https://fj7gzz4jjg.execute-api.us-east-1.amazonaws.com/production/complete',
+    INITIATE_UPLOAD: `${SHARE_API}/initiate`,
+    COMPLETE_UPLOAD: `${SHARE_API}/complete`,
     // Moments gallery
-    MOMENTS_ADMIN: 'https://s2yz8yv7ec.execute-api.us-east-1.amazonaws.com/production/moments',
-    MOMENTS_PUBLIC: 'https://s05qxqhozf.execute-api.us-east-1.amazonaws.com/production/moments/public',
-    // Faces — face-recognition box control plane + box base (admin only).
+    MOMENTS_ADMIN: `${ADMIN_API}/moments`,
+    MOMENTS_PUBLIC: `${PUBLIC_API}/moments/public`,
+    // Faces — control plane (v2 API on its own stable domain) + box base.
     // FACES_BOX is an EPHEMERAL on-demand instance and is usually off, so it is
     // excluded from live smoke checks (see api.smoke.test.ts).
-    FACES_CONTROL: 'https://jif6kxnpyj.execute-api.us-east-1.amazonaws.com',
+    FACES_CONTROL: 'https://faces-control.pdaboracay.com',
     FACES_BOX: 'https://faces.pdaboracay.com',
     // Moments "Official" gallery — static objects served by CloudFront.
     MOMENTS_OFFICIAL_MANIFEST: 'https://moments.pdaboracay.com/uploads/official/manifest.json',
