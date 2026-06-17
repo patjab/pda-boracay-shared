@@ -14,44 +14,43 @@ import { SiteUrls } from './siteUrls';
  * these stay green — but a typo'd or missing path goes red.
  */
 
-// Resource path = pathname minus the API Gateway stage prefix and any query.
-// `execute-api` URLs carry `/production/<path>`; custom domains (e.g. the
-// already-migrated survey.pdaboracay.com) carry just `/<path>`. Both normalize
-// to the same value.
+// Resource path = pathname minus any query. The 5 REST APIs sit under
+// api.pdaboracay.com/<frontend>/… (base path per API); the stable domains
+// (survey, faces-control, faces box, moments-official) carry their own paths.
 function resourcePath(url: string): string {
-    const { pathname } = new URL(url);
-    return pathname.replace(/^\/production(?=\/|$)/, '') || '/';
+    return new URL(url).pathname || '/';
 }
 
-// The agreed endpoint inventory (resource paths). Update this deliberately when
-// adding/removing an endpoint — that's the point: it forces a conscious change.
+// The agreed endpoint inventory (full resource paths incl. the api.pdaboracay.com
+// base path). Update deliberately when adding/removing/moving an endpoint —
+// that's the point: it forces a conscious, reviewed change.
 const EXPECTED_PATHS: Record<keyof typeof ApiConstants, string> = {
-    GET_ALL_INVITES: '/invite',
-    GET_INVITE: '/invite',
-    CREATE_INVITES_BY_CSV_UPLOAD: '/scramble',
-    INCREMENT_COUNT_OF_INVITE_SENT: '/scramble/increment',
-    GET_RSVPS: '/rsvp',
-    GET_AND_PUT_ADMIN_ADDED_DATA_TO_RSVPS: '/organize',
-    GET_PRECHECKINS: '/pda-boracay-precheckins',
-    SEND_CODE: '/send-code',
-    VERIFY_CODE: '/verify-code',
-    GET_SAVE_THE_DATE_RECORDS: '/records',
-    SAVE_THE_DATE_RECORD: '/record',
-    GUEST_AUTH: '/guest',
+    GET_ALL_INVITES: '/admin/invite',
+    GET_INVITE: '/public/invite',
+    CREATE_INVITES_BY_CSV_UPLOAD: '/admin/scramble',
+    INCREMENT_COUNT_OF_INVITE_SENT: '/admin/scramble/increment',
+    GET_RSVPS: '/reservations/rsvp',
+    GET_AND_PUT_ADMIN_ADDED_DATA_TO_RSVPS: '/reservations/organize',
+    GET_PRECHECKINS: '/reservations/pda-boracay-precheckins',
+    SEND_CODE: '/reservations/send-code',
+    VERIFY_CODE: '/reservations/verify-code',
+    GET_SAVE_THE_DATE_RECORDS: '/savethedate/records',
+    SAVE_THE_DATE_RECORD: '/savethedate/record',
+    GUEST_AUTH: '/savethedate/guest',
     GET_ALL_SURVEYS: '/surveys',
     GET_SURVEY_COUNTS: '/surveys/count',
-    GET_IP_ADDRESSES: '/',
-    LOGIN: '/login',
-    ADMIN_EVENTS: '/events',
-    TEMPLATES: '/templates',
-    EMAIL_TEMPLATE: '/email-template',
-    WISHES: '/wishes',
-    EVENTS: '/events',
-    SURVEY: '/survey',
-    INITIATE_UPLOAD: '/initiate',
-    COMPLETE_UPLOAD: '/complete',
-    MOMENTS_ADMIN: '/moments',
-    MOMENTS_PUBLIC: '/moments/public',
+    GET_IP_ADDRESSES: '/admin',
+    LOGIN: '/admin/login',
+    ADMIN_EVENTS: '/admin/events',
+    TEMPLATES: '/admin/templates',
+    EMAIL_TEMPLATE: '/admin/email-template',
+    WISHES: '/public/wishes',
+    EVENTS: '/public/events',
+    SURVEY: '/public/survey',
+    INITIATE_UPLOAD: '/share/initiate',
+    COMPLETE_UPLOAD: '/share/complete',
+    MOMENTS_ADMIN: '/admin/moments',
+    MOMENTS_PUBLIC: '/public/moments/public',
     FACES_CONTROL: '/',
     FACES_BOX: '/',
     MOMENTS_OFFICIAL_MANIFEST: '/uploads/official/manifest.json',
