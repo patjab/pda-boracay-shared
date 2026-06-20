@@ -5,11 +5,31 @@
 // volatile execute-api IDs out of the UIs (resolves pda-boracay-cdk#2).
 // faces-control is the v2 control API on its own domain. survey / moments(-official)
 // / faces box are already stable.
-const PUBLIC_API = 'https://public-api.pdaboracay.com';
-const ADMIN_API = 'https://admin-api.pdaboracay.com';
-const RESERVATIONS_API = 'https://reservations-api.pdaboracay.com';
-const SAVETHEDATE_API = 'https://savethedate-api.pdaboracay.com';
-const SHARE_API = 'https://share-api.pdaboracay.com';
+//
+// Environment (pda-boracay-cdk #6 testing rollout): the SAME UI bundle serves prod
+// and the testing mirror. The target environment is picked at RUNTIME from the
+// page hostname — a build served from *.test.pdaboracay.com targets the
+// *.test.pdaboracay.com APIs; everything else (prod, and Node/SSR/unit-test where
+// `window` is absent) targets prod. One build, no per-bundler build flags.
+// NOTE: the 5 *-api.test domains exist; survey/faces/faces-control/moments need a
+// test equivalent before those features work under test (else they fail closed —
+// test never silently hits prod data).
+const isTestEnv =
+    typeof window !== 'undefined' &&
+    /(^|\.)test\.pdaboracay\.com$/.test(window.location.hostname);
+
+const host = (sub: string): string =>
+    `https://${sub}${isTestEnv ? '.test' : ''}.pdaboracay.com`;
+
+const PUBLIC_API = host('public-api');
+const ADMIN_API = host('admin-api');
+const RESERVATIONS_API = host('reservations-api');
+const SAVETHEDATE_API = host('savethedate-api');
+const SHARE_API = host('share-api');
+const SURVEY_API = host('survey');
+const FACES_CONTROL_API = host('faces-control');
+const FACES_BOX_BASE = host('faces');
+const MOMENTS_BASE = host('moments');
 
 export const ApiConstants = {
     // Invites
@@ -37,8 +57,8 @@ export const ApiConstants = {
     GUEST_AUTH: `${SAVETHEDATE_API}/guest?guest=`,
 
     // Surveys (survey app — already on its own stable domain)
-    GET_ALL_SURVEYS: 'https://survey.pdaboracay.com/surveys',
-    GET_SURVEY_COUNTS: 'https://survey.pdaboracay.com/surveys/count',
+    GET_ALL_SURVEYS: `${SURVEY_API}/surveys`,
+    GET_SURVEY_COUNTS: `${SURVEY_API}/surveys/count`,
 
     // IP tracking (admin API root)
     GET_IP_ADDRESSES: `${ADMIN_API}`,
@@ -73,10 +93,10 @@ export const ApiConstants = {
     // Faces — control plane (v2 API on its own stable domain) + box base.
     // FACES_BOX is an EPHEMERAL on-demand instance and is usually off, so it is
     // excluded from live smoke checks (see api.smoke.test.ts).
-    FACES_CONTROL: 'https://faces-control.pdaboracay.com',
-    FACES_BOX: 'https://faces.pdaboracay.com',
+    FACES_CONTROL: FACES_CONTROL_API,
+    FACES_BOX: FACES_BOX_BASE,
 
     // Moments "Official" gallery — static objects served by CloudFront.
-    MOMENTS_OFFICIAL_MANIFEST: 'https://moments.pdaboracay.com/uploads/official/manifest.json',
-    MOMENTS_OFFICIAL_BOOT: 'https://moments.pdaboracay.com/uploads/official/_boot.json',
+    MOMENTS_OFFICIAL_MANIFEST: `${MOMENTS_BASE}/uploads/official/manifest.json`,
+    MOMENTS_OFFICIAL_BOOT: `${MOMENTS_BASE}/uploads/official/_boot.json`,
 } as const;
