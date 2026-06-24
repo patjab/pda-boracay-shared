@@ -46,8 +46,4 @@ exports.ApiRoutes = [
     { label: 'reservations', method: 'POST', path: '/verify-code' },
     { label: 'reservations', method: 'PUT', path: '/organize' },
     { label: 'reservations', method: 'PUT', path: '/rsvp' },
-    { label: 'savethedate', method: 'GET', path: '/guest' },
-    { label: 'savethedate', method: 'GET', path: '/records' },
-    { label: 'savethedate', method: 'PATCH', path: '/record' },
-    { label: 'savethedate', method: 'PUT', path: '/record' },
 ];
