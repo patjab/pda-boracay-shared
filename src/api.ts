@@ -26,7 +26,6 @@ const ADMIN_API = host('admin-api');
 const RESERVATIONS_API = host('reservations-api');
 const SAVETHEDATE_API = host('savethedate-api');
 const SHARE_API = host('share-api');
-const SURVEY_API = host('survey');
 const FACES_CONTROL_API = host('faces-control');
 const FACES_BOX_BASE = host('faces');
 const MOMENTS_BASE = host('moments');
@@ -64,9 +63,10 @@ export const ApiConstants = {
     SAVE_THE_DATE_RECORD: `${SAVETHEDATE_API}/record`,
     GUEST_AUTH: `${SAVETHEDATE_API}/guest?guest=`,
 
-    // Surveys (survey app — already on its own stable domain)
-    GET_ALL_SURVEYS: `${SURVEY_API}/surveys`,
-    GET_SURVEY_COUNTS: `${SURVEY_API}/surveys/count`,
+    // Surveys — served by the survey lambda on the managed public-api (#210). The old
+    // standalone survey.pdaboracay.com had no test host, so these failed closed on test.
+    GET_ALL_SURVEYS: `${PUBLIC_API}/surveys`,
+    GET_SURVEY_COUNTS: `${PUBLIC_API}/surveys/count`,
 
     // IP tracking (admin API root)
     GET_IP_ADDRESSES: `${ADMIN_API}`,

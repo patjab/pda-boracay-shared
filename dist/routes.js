@@ -36,6 +36,8 @@ exports.ApiRoutes = [
     { label: 'public', method: 'GET', path: '/invite' },
     { label: 'public', method: 'GET', path: '/moments' },
     { label: 'public', method: 'GET', path: '/moments/public' },
+    { label: 'public', method: 'GET', path: '/surveys' },
+    { label: 'public', method: 'GET', path: '/surveys/count' },
     { label: 'public', method: 'GET', path: '/wishes' },
     { label: 'public', method: 'PUT', path: '/survey' },
     { label: 'public', method: 'PUT', path: '/wishes' },
