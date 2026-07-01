@@ -39,6 +39,7 @@ exports.ApiRoutes = [
     { label: 'public', method: 'GET', path: '/surveys' },
     { label: 'public', method: 'GET', path: '/surveys/count' },
     { label: 'public', method: 'GET', path: '/wishes' },
+    { label: 'public', method: 'POST', path: '/auth/exchange' },
     { label: 'public', method: 'PUT', path: '/survey' },
     { label: 'public', method: 'PUT', path: '/wishes' },
     { label: 'reservations', method: 'GET', path: '/pda-boracay-precheckins' },
