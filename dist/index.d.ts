@@ -8,5 +8,5 @@ export { useApi } from './hooks/useApi';
 export { useGuardedLoad } from './hooks/useGuardedLoad';
 export { ApiError, asArray, clean, getJson, jsonOr, runGuarded, sendJson } from './data';
 export type { GuardedState } from './data';
-export { initAuth, signOut, getIdToken, isAuthenticated, authHeaders, getEmail, GoogleSignInButton, } from './auth';
+export { initAuth, signOut, getIdToken, authHeaders, getEmail, GoogleSignInButton, } from './auth';
 export { ensureGuestToken, guestAuthHeaders, clearGuestToken } from './guestAuth';

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearGuestToken = exports.guestAuthHeaders = exports.ensureGuestToken = exports.GoogleSignInButton = exports.getEmail = exports.authHeaders = exports.isAuthenticated = exports.getIdToken = exports.signOut = exports.initAuth = exports.sendJson = exports.runGuarded = exports.jsonOr = exports.getJson = exports.clean = exports.asArray = exports.ApiError = exports.useGuardedLoad = exports.useApi = exports.useLoading = exports.ApiRoutes = exports.SiteUrls = exports.ApiConstants = void 0;
+exports.clearGuestToken = exports.guestAuthHeaders = exports.ensureGuestToken = exports.GoogleSignInButton = exports.getEmail = exports.authHeaders = exports.getIdToken = exports.signOut = exports.initAuth = exports.sendJson = exports.runGuarded = exports.jsonOr = exports.getJson = exports.clean = exports.asArray = exports.ApiError = exports.useGuardedLoad = exports.useApi = exports.useLoading = exports.ApiRoutes = exports.SiteUrls = exports.ApiConstants = void 0;
 var api_1 = require("./api");
 Object.defineProperty(exports, "ApiConstants", { enumerable: true, get: function () { return api_1.ApiConstants; } });
 var siteUrls_1 = require("./siteUrls");
@@ -25,7 +25,6 @@ var auth_1 = require("./auth");
 Object.defineProperty(exports, "initAuth", { enumerable: true, get: function () { return auth_1.initAuth; } });
 Object.defineProperty(exports, "signOut", { enumerable: true, get: function () { return auth_1.signOut; } });
 Object.defineProperty(exports, "getIdToken", { enumerable: true, get: function () { return auth_1.getIdToken; } });
-Object.defineProperty(exports, "isAuthenticated", { enumerable: true, get: function () { return auth_1.isAuthenticated; } });
 Object.defineProperty(exports, "authHeaders", { enumerable: true, get: function () { return auth_1.authHeaders; } });
 Object.defineProperty(exports, "getEmail", { enumerable: true, get: function () { return auth_1.getEmail; } });
 Object.defineProperty(exports, "GoogleSignInButton", { enumerable: true, get: function () { return auth_1.GoogleSignInButton; } });
