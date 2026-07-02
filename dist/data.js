@@ -38,6 +38,16 @@ class ApiError extends Error {
     }
 }
 exports.ApiError = ApiError;
+// A body-stream read failure (connection reset mid-body, etc.) is a failed
+// call, not a successful empty response — surface it instead of masking it.
+const readBody = async (res, label) => {
+    try {
+        return await res.text();
+    }
+    catch (e) {
+        throw new ApiError(label, `${label}: failed to read the response body (${e instanceof Error ? e.message : String(e)})`, res.status);
+    }
+};
 /**
  * Read primitive: GET the URL, guard `res.ok`, parse JSON. The signed-in Google
  * token (when present) is attached automatically — same behavior consumers get
@@ -57,7 +67,7 @@ async function getJson(url, opts = {}) {
     }
     if (!res.ok)
         throw new ApiError(label, `${label}: HTTP ${res.status}`, res.status);
-    const text = await res.text().catch(() => '');
+    const text = await readBody(res, label);
     if (!text.trim())
         return undefined;
     try {
@@ -108,7 +118,7 @@ async function sendJson(url, opts) {
     catch (e) {
         throw new ApiError(label, `${label}: network error (${e instanceof Error ? e.message : String(e)})`);
     }
-    const text = await res.text().catch(() => '');
+    const text = await readBody(res, label);
     if (!res.ok) {
         let serverMessage;
         try {

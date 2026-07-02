@@ -36,6 +36,20 @@ export class ApiError extends Error {
   }
 }
 
+// A body-stream read failure (connection reset mid-body, etc.) is a failed
+// call, not a successful empty response — surface it instead of masking it.
+const readBody = async (res: Response, label: string): Promise<string> => {
+  try {
+    return await res.text();
+  } catch (e) {
+    throw new ApiError(
+      label,
+      `${label}: failed to read the response body (${e instanceof Error ? e.message : String(e)})`,
+      res.status,
+    );
+  }
+};
+
 interface CallOptions {
   /** Short human name for the call, used in errors/logs. Defaults to the URL. */
   label?: string;
@@ -59,7 +73,7 @@ export async function getJson<T>(url: string, opts: CallOptions = {}): Promise<T
     throw new ApiError(label, `${label}: network error (${e instanceof Error ? e.message : String(e)})`);
   }
   if (!res.ok) throw new ApiError(label, `${label}: HTTP ${res.status}`, res.status);
-  const text = await res.text().catch(() => '');
+  const text = await readBody(res, label);
   if (!text.trim()) return undefined;
   try {
     return JSON.parse(text) as T;
@@ -112,7 +126,7 @@ export async function sendJson<T = void>(url: string, opts: SendOptions): Promis
   } catch (e) {
     throw new ApiError(label, `${label}: network error (${e instanceof Error ? e.message : String(e)})`);
   }
-  const text = await res.text().catch(() => '');
+  const text = await readBody(res, label);
   if (!res.ok) {
     let serverMessage: string | undefined;
     try {
