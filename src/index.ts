@@ -12,7 +12,6 @@ export {
   initAuth,
   signOut,
   getIdToken,
-  isAuthenticated,
   authHeaders,
   getEmail,
   GoogleSignInButton,

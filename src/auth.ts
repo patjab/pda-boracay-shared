@@ -66,7 +66,6 @@ export function getIdToken(): string | null {
     return null;
   }
 }
-export const isAuthenticated = (): boolean => !!getIdToken();
 export function authHeaders(): Record<string, string> {
   const t = getIdToken();
   return t ? { Authorization: `Bearer ${t}` } : {};

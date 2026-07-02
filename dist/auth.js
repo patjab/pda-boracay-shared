@@ -33,7 +33,6 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isAuthenticated = void 0;
 exports.initAuth = initAuth;
 exports.getIdToken = getIdToken;
 exports.authHeaders = authHeaders;
@@ -101,8 +100,6 @@ function getIdToken() {
         return null;
     }
 }
-const isAuthenticated = () => !!getIdToken();
-exports.isAuthenticated = isAuthenticated;
 function authHeaders() {
     const t = getIdToken();
     return t ? { Authorization: `Bearer ${t}` } : {};
