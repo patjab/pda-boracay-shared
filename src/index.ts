@@ -5,6 +5,9 @@ export type { ApiRoute } from './routes';
 export type { Companion } from './types';
 export { useLoading } from './hooks/useLoading';
 export { useApi } from './hooks/useApi';
+export { useGuardedLoad } from './hooks/useGuardedLoad';
+export { ApiError, asArray, clean, getJson, jsonOr, runGuarded, sendJson } from './data';
+export type { GuardedState } from './data';
 export {
   initAuth,
   signOut,
