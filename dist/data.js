@@ -42,6 +42,8 @@ exports.ApiError = ApiError;
  * Read primitive: GET the URL, guard `res.ok`, parse JSON. The signed-in Google
  * token (when present) is attached automatically — same behavior consumers get
  * from the admin's patched fetch, made explicit. Throws ApiError on any failure.
+ * A successful empty response (204, or 200 with no body) resolves to undefined
+ * rather than failing JSON parse.
  */
 async function getJson(url, opts = {}) {
     var _a;
@@ -55,8 +57,11 @@ async function getJson(url, opts = {}) {
     }
     if (!res.ok)
         throw new ApiError(label, `${label}: HTTP ${res.status}`, res.status);
+    const text = await res.text().catch(() => '');
+    if (!text)
+        return undefined;
     try {
-        return (await res.json());
+        return JSON.parse(text);
     }
     catch (_b) {
         throw new ApiError(label, `${label}: response was not valid JSON`, res.status);

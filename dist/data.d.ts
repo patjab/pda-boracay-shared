@@ -19,6 +19,8 @@ interface CallOptions {
  * Read primitive: GET the URL, guard `res.ok`, parse JSON. The signed-in Google
  * token (when present) is attached automatically — same behavior consumers get
  * from the admin's patched fetch, made explicit. Throws ApiError on any failure.
+ * A successful empty response (204, or 200 with no body) resolves to undefined
+ * rather than failing JSON parse.
  */
 export declare function getJson<T>(url: string, opts?: CallOptions): Promise<T>;
 /**

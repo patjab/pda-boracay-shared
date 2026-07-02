@@ -5,6 +5,10 @@ import { GuardedState } from '../data';
  * clear and any throw — from the fetches OR the post-fetch view-model
  * transform — surfacing as the given error message instead of a hang.
  *
+ * Each run gets a monotonically increasing id; only the latest run may write
+ * state, so a slower earlier run can't overwrite a newer one (reload spam) and
+ * an in-flight run stops writing after unmount.
+ *
  * `deps` re-creates the loader like useCallback deps would; pass the values
  * the loader closes over (usually none).
  */

@@ -42,6 +42,13 @@ describe('getJson', () => {
     fetchMock().mockResolvedValue(new Response('<html>', { status: 200 }));
     await expect(getJson('https://x/y')).rejects.toBeInstanceOf(ApiError);
   });
+
+  it('resolves undefined for a successful empty response (204 / empty 200)', async () => {
+    fetchMock().mockResolvedValue(new Response(null, { status: 204 }));
+    await expect(getJson('https://x/y')).resolves.toBeUndefined();
+    fetchMock().mockResolvedValue(new Response('', { status: 200 }));
+    await expect(getJson('https://x/y')).resolves.toBeUndefined();
+  });
 });
 
 describe('jsonOr', () => {

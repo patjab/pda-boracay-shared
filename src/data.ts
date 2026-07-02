@@ -47,6 +47,8 @@ interface CallOptions {
  * Read primitive: GET the URL, guard `res.ok`, parse JSON. The signed-in Google
  * token (when present) is attached automatically — same behavior consumers get
  * from the admin's patched fetch, made explicit. Throws ApiError on any failure.
+ * A successful empty response (204, or 200 with no body) resolves to undefined
+ * rather than failing JSON parse.
  */
 export async function getJson<T>(url: string, opts: CallOptions = {}): Promise<T> {
   const label = opts.label ?? url;
@@ -57,8 +59,10 @@ export async function getJson<T>(url: string, opts: CallOptions = {}): Promise<T
     throw new ApiError(label, `${label}: network error (${e instanceof Error ? e.message : String(e)})`);
   }
   if (!res.ok) throw new ApiError(label, `${label}: HTTP ${res.status}`, res.status);
+  const text = await res.text().catch(() => '');
+  if (!text) return undefined as T;
   try {
-    return (await res.json()) as T;
+    return JSON.parse(text) as T;
   } catch {
     throw new ApiError(label, `${label}: response was not valid JSON`, res.status);
   }
