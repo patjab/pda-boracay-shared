@@ -1,15 +1,17 @@
 // Guest token for the reservations API (pda-boracay-cdk #296 / #100 Phase 1).
 //
-// A guest arrives via a ?invited=<userId> link. This module exchanges that userId for a
-// short-lived, guest-scoped JWT (POST /auth/exchange) and caches it in sessionStorage, so
-// the reservations calls (RSVP / pre-check-in) can send `Authorization: Bearer <jwt>`. The
-// invite link IS the credential — same trust model as the link itself.
+// A guest arrives via a /e/<eventId>/?invited=<userId> link. This module exchanges that
+// userId for a short-lived, guest-scoped JWT (POST /events/{eventId}/auth/exchange,
+// cdk#427: the exchange is event-scoped — the path names the event whose membership
+// authorizes the mint) and caches it in sessionStorage, so the reservations calls
+// (RSVP / pre-check-in) can send `Authorization: Bearer <jwt>`. The invite link IS the
+// credential — same trust model as the link itself.
 //
 // Distinct from auth.ts: that holds the Google ID token (the admin / check-in sign-in);
 // this is the per-guest reservations token, keyed to the invited userId. sessionStorage is
 // only touched inside functions, so importing this module in Node (e2e, the contract test)
 // is safe — only calling ensureGuestToken() needs a browser.
-import { ApiConstants } from './api';
+import { GuestEventApi } from './api';
 
 const TOKEN_KEY = 'pdab_guest_token';
 // Refresh a little before the real edge so an in-flight request never carries a token that
@@ -20,16 +22,22 @@ interface StoredToken {
   token: string;
   exp: number; // unix seconds (from the exchange response)
   userId: string;
+  /** The event the token was minted against (cdk#427): tokens are event-scoped —
+   *  a cached one must never satisfy a DIFFERENT event's calls, or a stale entry
+   *  would suppress the fresh (membership-validating) exchange for that event. */
+  eventId: string;
 }
 
-function readValid(userId: string): string | null {
+function readValid(eventId: string, userId: string): string | null {
   const raw = sessionStorage.getItem(TOKEN_KEY);
   if (!raw) return null;
   try {
     const s = JSON.parse(raw) as StoredToken;
-    if (s.userId === userId && s.token && s.exp * 1000 - SKEW_MS > Date.now()) return s.token;
+    if (s.eventId === eventId && s.userId === userId && s.token
+        && s.exp * 1000 - SKEW_MS > Date.now()) return s.token;
   } catch {
-    /* corrupt entry -> treat as absent */
+    /* corrupt entry -> treat as absent (a pre-#427 entry without eventId parses
+       fine and is rejected by the eventId equality check above instead) */
   }
   return null;
 }
@@ -43,10 +51,10 @@ const inFlight = new Map<string, Promise<string | null>>();
 // Each claim bumps the generation; an exchange only writes if its snapshot still matches.
 let cacheGeneration = 0;
 
-async function exchange(userId: string): Promise<string | null> {
+async function exchange(eventId: string, userId: string): Promise<string | null> {
   const generation = cacheGeneration;
   try {
-    const res = await fetch(ApiConstants.AUTH_EXCHANGE, {
+    const res = await fetch(GuestEventApi.exchange(eventId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
@@ -56,7 +64,7 @@ async function exchange(userId: string): Promise<string | null> {
     if (!res.ok) return null;
     const { token, exp } = (await res.json()) as { token: string; exp: number };
     if (generation === cacheGeneration) {
-      sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ token, exp, userId } as StoredToken));
+      sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ token, exp, userId, eventId } as StoredToken));
     }
     return token; // still valid for THIS caller's request even when superseded
   } catch {
@@ -65,30 +73,40 @@ async function exchange(userId: string): Promise<string | null> {
 }
 
 /**
- * Return a valid guest token for this userId, exchanging + caching if needed. Never throws;
- * returns null when there's no userId or the exchange fails.
+ * Return a valid guest token for this userId, exchanging + caching if needed. The exchange
+ * is event-scoped (cdk#427): `eventId` is the SPA's path tenant, and the mint succeeds only
+ * if the userId resolves to an invitation in THAT event. Never throws; returns null when
+ * either id is missing or the exchange fails.
  */
-export async function ensureGuestToken(userId: string | null | undefined): Promise<string | null> {
-  if (!userId) return null;
-  const cached = readValid(userId);
+export async function ensureGuestToken(
+  eventId: string | null | undefined,
+  userId: string | null | undefined,
+): Promise<string | null> {
+  if (!eventId || !userId) return null;
+  const cached = readValid(eventId, userId);
   if (cached) return cached;
-  let p = inFlight.get(userId);
+  // JSON-encoded composite: collision-free even if an id ever contained ':'.
+  const flightKey = JSON.stringify([eventId, userId]);
+  let p = inFlight.get(flightKey);
   if (!p) {
-    p = exchange(userId).finally(() => inFlight.delete(userId));
-    inFlight.set(userId, p);
+    p = exchange(eventId, userId).finally(() => inFlight.delete(flightKey));
+    inFlight.set(flightKey, p);
   }
   return p;
 }
 
 /** Authorization header for a reservations call, or {} when no token is available. */
-export async function guestAuthHeaders(userId: string | null | undefined): Promise<Record<string, string>> {
-  const token = await ensureGuestToken(userId);
+export async function guestAuthHeaders(
+  eventId: string | null | undefined,
+  userId: string | null | undefined,
+): Promise<Record<string, string>> {
+  const token = await ensureGuestToken(eventId, userId);
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 // ---- identity claim / Google-first login (cdk#438 + cdk#439, #373 D2–D5) -------------
 //
-// POST /auth/claim, two lanes on one route:
+// POST /events/{eventId}/auth/claim, two lanes on one route (event-scoped, cdk#427):
 //   * WITH userId (an invite session): bind/merge the Google email onto the invite's
 //     canonical identity — the "link my Google account" affordance.
 //   * WITHOUT userId: Google-first login — the verified email resolves to this event's
@@ -117,15 +135,18 @@ export type ClaimResult =
   | { kind: 'error' };
 
 export async function claimIdentity(params: {
+  /** The SPA's path tenant (cdk#427): candidates/labels are scoped to this event (cdk#452). */
+  eventId: string;
   credential: string;
   userId?: string;
   chooseUserId?: string;
 }): Promise<ClaimResult> {
   try {
-    const res = await fetch(ApiConstants.AUTH_CLAIM, {
+    const { eventId, ...body } = params;
+    const res = await fetch(GuestEventApi.claim(eventId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
     });
     if (res.status === 200) {
       // The response's userId is the CANONICAL identity — after a merge it differs
@@ -139,7 +160,7 @@ export async function claimIdentity(params: {
       cacheGeneration += 1; // invalidate any in-flight exchange for the old identity
       sessionStorage.setItem(
         TOKEN_KEY,
-        JSON.stringify({ token, exp, userId: canonicalUserId } as StoredToken),
+        JSON.stringify({ token, exp, userId: canonicalUserId, eventId } as StoredToken),
       );
       return { kind: 'ok', userId: canonicalUserId, claimed: claimed === true };
     }
