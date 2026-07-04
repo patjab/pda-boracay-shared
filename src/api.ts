@@ -130,6 +130,8 @@ export const AdminEventApi = {
     precheckins: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins`,
     precheckinByEmail: (eventId: string, email: string) =>
         `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins/${encodeURIComponent(email)}`,
+    /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
+    assets: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/assets`,
     moments: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
     momentsPublic: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/public`,
     templates: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates`,
