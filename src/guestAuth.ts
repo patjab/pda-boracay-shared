@@ -37,7 +37,14 @@ function readValid(userId: string): string | null {
 // Dedup concurrent exchanges for the same userId (several reservations calls fire on mount).
 const inFlight = new Map<string, Promise<string | null>>();
 
+// A claim supersedes any in-flight exchange (#439 review): reservations calls firing on
+// mount can have an exchange for the OLD identity in flight while claimIdentity() lands
+// the canonical one — a stale exchange must not clobber the freshly claimed cache entry.
+// Each claim bumps the generation; an exchange only writes if its snapshot still matches.
+let cacheGeneration = 0;
+
 async function exchange(userId: string): Promise<string | null> {
+  const generation = cacheGeneration;
   try {
     const res = await fetch(ApiConstants.AUTH_EXCHANGE, {
       method: 'POST',
@@ -48,8 +55,10 @@ async function exchange(userId: string): Promise<string | null> {
     // (today's open reservations API still accepts it — until the authorizer lands).
     if (!res.ok) return null;
     const { token, exp } = (await res.json()) as { token: string; exp: number };
-    sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ token, exp, userId } as StoredToken));
-    return token;
+    if (generation === cacheGeneration) {
+      sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ token, exp, userId } as StoredToken));
+    }
+    return token; // still valid for THIS caller's request even when superseded
   } catch {
     return null;
   }
@@ -119,14 +128,20 @@ export async function claimIdentity(params: {
       body: JSON.stringify(params),
     });
     if (res.status === 200) {
-      const { token, exp, userId, claimed } = (await res.json()) as {
+      // The response's userId is the CANONICAL identity — after a merge it differs
+      // from params.userId (the invite link's provisional id); never conflate them.
+      const { token, exp, userId: canonicalUserId, claimed } = (await res.json()) as {
         token: string;
         exp: number;
         userId: string;
         claimed?: boolean;
       };
-      sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ token, exp, userId } as StoredToken));
-      return { kind: 'ok', userId, claimed: claimed === true };
+      cacheGeneration += 1; // invalidate any in-flight exchange for the old identity
+      sessionStorage.setItem(
+        TOKEN_KEY,
+        JSON.stringify({ token, exp, userId: canonicalUserId } as StoredToken),
+      );
+      return { kind: 'ok', userId: canonicalUserId, claimed: claimed === true };
     }
     if (res.status === 404) return { kind: 'none' };
     if (res.status === 401) return { kind: 'invalid' };
