@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ensureGuestToken = ensureGuestToken;
 exports.guestAuthHeaders = guestAuthHeaders;
+exports.claimIdentity = claimIdentity;
 exports.clearGuestToken = clearGuestToken;
 // Guest token for the reservations API (pda-boracay-cdk #296 / #100 Phase 1).
 //
@@ -75,6 +76,32 @@ async function ensureGuestToken(userId) {
 async function guestAuthHeaders(userId) {
     const token = await ensureGuestToken(userId);
     return token ? { Authorization: `Bearer ${token}` } : {};
+}
+async function claimIdentity(params) {
+    try {
+        const res = await fetch(api_1.ApiConstants.AUTH_CLAIM, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params),
+        });
+        if (res.status === 200) {
+            const { token, exp, userId, claimed } = (await res.json());
+            sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ token, exp, userId }));
+            return { kind: 'ok', userId, claimed: claimed === true };
+        }
+        if (res.status === 404)
+            return { kind: 'none' };
+        if (res.status === 401)
+            return { kind: 'invalid' };
+        if (res.status === 409) {
+            const { candidates } = (await res.json());
+            return { kind: 'chooser', candidates: Array.isArray(candidates) ? candidates : [] };
+        }
+        return { kind: 'error' };
+    }
+    catch (_a) {
+        return { kind: 'error' };
+    }
 }
 /** Drop the cached guest token (e.g. on identity change / sign-out). */
 function clearGuestToken() {
