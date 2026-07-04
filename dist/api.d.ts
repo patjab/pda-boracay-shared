@@ -49,6 +49,8 @@ export declare const AdminEventApi: {
     readonly scrambleIncrement: (eventId: string) => string;
     readonly precheckins: (eventId: string) => string;
     readonly precheckinByEmail: (eventId: string, email: string) => string;
+    /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
+    readonly assets: (eventId: string) => string;
     readonly moments: (eventId: string) => string;
     readonly momentsPublic: (eventId: string) => string;
     readonly templates: (eventId: string) => string;

@@ -23,6 +23,7 @@ export const ApiRoutes: readonly ApiRoute[] = [
   { label: 'admin', method: 'GET', path: '/events/{eventId}/precheckins' },
   { label: 'admin', method: 'POST', path: '/events/{eventId}/precheckins' },
   { label: 'admin', method: 'GET', path: '/events/{eventId}/precheckins/{email}' },
+  { label: 'admin', method: 'POST', path: '/events/{eventId}/assets' },
   { label: 'admin', method: 'GET', path: '/events/{eventId}/moments' },
   { label: 'admin', method: 'PATCH', path: '/events/{eventId}/moments' },
   { label: 'admin', method: 'GET', path: '/events/{eventId}/moments/public' },

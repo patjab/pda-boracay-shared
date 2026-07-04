@@ -110,6 +110,8 @@ exports.AdminEventApi = {
     scrambleIncrement: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble/increment`,
     precheckins: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins`,
     precheckinByEmail: (eventId, email) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins/${encodeURIComponent(email)}`,
+    /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
+    assets: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/assets`,
     moments: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
     momentsPublic: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/public`,
     templates: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates`,
