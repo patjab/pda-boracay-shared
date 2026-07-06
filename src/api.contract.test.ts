@@ -103,7 +103,7 @@ describe('AdminEventApi contract', () => {
 
     it('covers every single-argument builder', () => {
         const singleArg = Object.keys(AdminEventApi).filter(
-            (k) => !['precheckinByEmail', 'template', 'stage', 'stageResponses'].includes(k));
+            (k) => !['precheckinByEmail', 'template', 'stage', 'stageResponses', 'stageResponse'].includes(k));
         expect(singleArg.sort()).toEqual(Object.keys(EXPECTED_EVENT_PATHS).sort());
     });
 
@@ -113,7 +113,7 @@ describe('AdminEventApi contract', () => {
         expect(new URL(url).hostname).toMatch(/^admin-api\./);
     });
 
-    it('two-argument builders place both encoded segments', () => {
+    it('multi-argument builders place every encoded segment', () => {
         expect(resourcePath(AdminEventApi.template('e-1', 't 1'))).toBe('/events/e-1/templates/t%201');
         expect(resourcePath(AdminEventApi.precheckinByEmail('e-1', 'a+b@x.co')))
             .toBe('/events/e-1/precheckins/a%2Bb%40x.co');
@@ -121,6 +121,8 @@ describe('AdminEventApi contract', () => {
             .toBe('/events/e-1/stages/PRE%20CHECK');
         expect(resourcePath(AdminEventApi.stageResponses('e-1', 'PRECHECKIN')))
             .toBe('/events/e-1/stages/PRECHECKIN/responses');
+        expect(resourcePath(AdminEventApi.stageResponse('e-1', 'PRECHECKIN', 'u/1')))
+            .toBe('/events/e-1/stages/PRECHECKIN/responses/u%2F1');
     });
 
     it('URI-encodes hostile eventIds instead of restructuring the path', () => {
