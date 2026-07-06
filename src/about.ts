@@ -160,9 +160,10 @@ export interface AboutIconDef {
   readonly label: string;
 }
 
-// `readonly` so a consumer can't mutate the single source of truth (e.g. `.sort()`
-// or `.push()`) and leave ABOUT_ICON_NAMES a stale snapshot (Copilot review, #48).
-export const ABOUT_ICONS: readonly AboutIconDef[] = [
+// Frozen at runtime (and `readonly` at compile time) so the single source of truth
+// can't be reordered or extended — a `.sort()`/`.push()`/`.splice()` would otherwise
+// leave ABOUT_ICON_NAMES a stale snapshot (Copilot review, #48).
+export const ABOUT_ICONS: readonly AboutIconDef[] = Object.freeze([
   { name: 'favorite', label: 'Heart' },
   { name: 'flight', label: 'Flight' },
   { name: 'accessTime', label: 'Clock' },
@@ -197,10 +198,10 @@ export const ABOUT_ICONS: readonly AboutIconDef[] = [
   { name: 'home', label: 'Home' },
   { name: 'moving', label: 'Trending' },
   { name: 'cake', label: 'Cake' },
-];
+]);
 
 /** Just the canonical icon names — handy for drift guards and membership checks. */
-export const ABOUT_ICON_NAMES: readonly string[] = ABOUT_ICONS.map((i) => i.name);
+export const ABOUT_ICON_NAMES: readonly string[] = Object.freeze(ABOUT_ICONS.map((i) => i.name));
 
 // ---- tree types (the GET/PUT /events/{eventId}/about payload) ---------------------
 
