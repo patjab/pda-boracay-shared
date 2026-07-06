@@ -65,10 +65,6 @@ export const ApiConstants = {
     // mirror (same lambda; the admin authorizer supplies isAdmin -> get_all_rsvps).
     GET_ALL_RSVPS: `${ADMIN_API}/rsvp`,
 
-    // Pre-checkins — public reservations route for guest link reads + the shangrila POST;
-    // admin-api mirror for the admin console's full-list read (admin-authed).
-    GET_ALL_PRECHECKINS: `${ADMIN_API}/pda-boracay-precheckins`,
-
     // Save the date
     GET_SAVE_THE_DATE_RECORDS: `${SAVETHEDATE_API}/records`,
     SAVE_THE_DATE_RECORD: `${SAVETHEDATE_API}/record`,
@@ -133,7 +129,6 @@ export const AdminEventApi = {
     invites: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/invite`,
     scramble: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble`,
     scrambleIncrement: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble/increment`,
-    precheckins: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins`,
     // Custom-stage definitions + the responses grid (cdk#466/#513).
     stages: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages`,
     stage: (eventId: string, stageId: string) =>
@@ -141,11 +136,9 @@ export const AdminEventApi = {
     stageResponses: (eventId: string, stageId: string) =>
         `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}/responses`,
     // Admin merge-write on ONE guest's stage response (cdk#529) - the room-block
-    // lane's home after the bespoke precheckin routes retire.
+    // lane (the bespoke precheckin routes retired with cdk#529).
     stageResponse: (eventId: string, stageId: string, userId: string) =>
         `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}/responses/${encodeURIComponent(userId)}`,
-    precheckinByEmail: (eventId: string, email: string) =>
-        `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins/${encodeURIComponent(email)}`,
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     assets: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/assets`,
     moments: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
@@ -176,7 +169,7 @@ export const AccountApi = {
  * Event-scoped GUEST + public endpoints (cdk#427 / #386 SI-5): the URL names the
  * TARGET event — the guest SPA's path-prefix tenant (cdk#447) reaches the API as a
  * path segment, never a server-pinned default. The guest-authed lanes
- * (rsvp/precheckins/uploads) are additionally validated server-side: the token's
+ * (rsvp/stages/uploads) are additionally validated server-side: the token's
  * guest must have a PROFILE row in the path event (fail closed). The public lanes
  * (auth/invite/moments-public/wishes/survey) take the path event directly.
  * The flat ApiConstants forms above remain until the cdk#427 contract step deletes
@@ -192,7 +185,6 @@ export const GuestEventApi = {
     wishes: (eventId: string) => `${PUBLIC_API}/events/${encodeURIComponent(eventId)}/wishes`,
     survey: (eventId: string) => `${PUBLIC_API}/events/${encodeURIComponent(eventId)}/survey`,
     rsvp: (eventId: string) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/rsvp`,
-    precheckins: (eventId: string) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/precheckins`,
     // The guest's own custom-stage submission (cdk#466/#513).
     stage: (eventId: string, stageId: string) =>
         `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}`,
