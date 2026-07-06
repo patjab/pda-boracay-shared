@@ -37,6 +37,9 @@ export declare const AdminEventApi: {
     readonly scramble: (eventId: string) => string;
     readonly scrambleIncrement: (eventId: string) => string;
     readonly precheckins: (eventId: string) => string;
+    readonly stages: (eventId: string) => string;
+    readonly stage: (eventId: string, stageId: string) => string;
+    readonly stageResponses: (eventId: string, stageId: string) => string;
     readonly precheckinByEmail: (eventId: string, email: string) => string;
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     readonly assets: (eventId: string) => string;
@@ -80,6 +83,7 @@ export declare const GuestEventApi: {
     readonly survey: (eventId: string) => string;
     readonly rsvp: (eventId: string) => string;
     readonly precheckins: (eventId: string) => string;
+    readonly stage: (eventId: string, stageId: string) => string;
     readonly initiateUpload: (eventId: string) => string;
     readonly completeUpload: (eventId: string) => string;
 };

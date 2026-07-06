@@ -101,6 +101,10 @@ exports.AdminEventApi = {
     scramble: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble`,
     scrambleIncrement: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble/increment`,
     precheckins: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins`,
+    // Custom-stage definitions + the responses grid (cdk#466/#513).
+    stages: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages`,
+    stage: (eventId, stageId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}`,
+    stageResponses: (eventId, stageId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}/responses`,
     precheckinByEmail: (eventId, email) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins/${encodeURIComponent(email)}`,
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     assets: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/assets`,
@@ -144,6 +148,8 @@ exports.GuestEventApi = {
     survey: (eventId) => `${PUBLIC_API}/events/${encodeURIComponent(eventId)}/survey`,
     rsvp: (eventId) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/rsvp`,
     precheckins: (eventId) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/precheckins`,
+    // The guest's own custom-stage submission (cdk#466/#513).
+    stage: (eventId, stageId) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}`,
     initiateUpload: (eventId) => `${UPLOAD_API}/events/${encodeURIComponent(eventId)}/initiate`,
     completeUpload: (eventId) => `${UPLOAD_API}/events/${encodeURIComponent(eventId)}/complete`,
 };
