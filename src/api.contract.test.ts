@@ -31,7 +31,6 @@ const EXPECTED_PATHS: Record<keyof typeof ApiConstants, string> = {
     INCREMENT_COUNT_OF_INVITE_SENT: '/scramble/increment',
     SET_INVITED_BY: '/invite',
     GET_ALL_RSVPS: '/rsvp',
-    GET_ALL_PRECHECKINS: '/pda-boracay-precheckins',
     GET_SAVE_THE_DATE_RECORDS: '/records',
     SAVE_THE_DATE_RECORD: '/record',
     GUEST_AUTH: '/guest',
@@ -90,7 +89,6 @@ describe('AdminEventApi contract', () => {
         invites: '/events/e-1/invite',
         scramble: '/events/e-1/scramble',
         scrambleIncrement: '/events/e-1/scramble/increment',
-        precheckins: '/events/e-1/precheckins',
         stages: '/events/e-1/stages',
         assets: '/events/e-1/assets',
         moments: '/events/e-1/moments',
@@ -103,7 +101,7 @@ describe('AdminEventApi contract', () => {
 
     it('covers every single-argument builder', () => {
         const singleArg = Object.keys(AdminEventApi).filter(
-            (k) => !['precheckinByEmail', 'template', 'stage', 'stageResponses', 'stageResponse'].includes(k));
+            (k) => !['template', 'stage', 'stageResponses', 'stageResponse'].includes(k));
         expect(singleArg.sort()).toEqual(Object.keys(EXPECTED_EVENT_PATHS).sort());
     });
 
@@ -115,8 +113,6 @@ describe('AdminEventApi contract', () => {
 
     it('multi-argument builders place every encoded segment', () => {
         expect(resourcePath(AdminEventApi.template('e-1', 't 1'))).toBe('/events/e-1/templates/t%201');
-        expect(resourcePath(AdminEventApi.precheckinByEmail('e-1', 'a+b@x.co')))
-            .toBe('/events/e-1/precheckins/a%2Bb%40x.co');
         expect(resourcePath(AdminEventApi.stage('e-1', 'PRE CHECK')))
             .toBe('/events/e-1/stages/PRE%20CHECK');
         expect(resourcePath(AdminEventApi.stageResponses('e-1', 'PRECHECKIN')))
@@ -146,7 +142,6 @@ describe('GuestEventApi contract', () => {
         wishes: ['/events/e-1/wishes', /^public-api\./],
         survey: ['/events/e-1/survey', /^public-api\./],
         rsvp: ['/events/e-1/rsvp', /^reservations-api\./],
-        precheckins: ['/events/e-1/precheckins', /^reservations-api\./],
         // Node (no window) resolves the prod host: share-api fronts the moments lambda.
         initiateUpload: ['/events/e-1/initiate', /^share-api\./],
         completeUpload: ['/events/e-1/complete', /^share-api\./],

@@ -19,9 +19,6 @@ exports.ApiRoutes = [
     { label: 'admin', method: 'PATCH', path: '/events/{eventId}/invite' },
     { label: 'admin', method: 'POST', path: '/events/{eventId}/scramble' },
     { label: 'admin', method: 'PATCH', path: '/events/{eventId}/scramble/increment' },
-    { label: 'admin', method: 'GET', path: '/events/{eventId}/precheckins' },
-    { label: 'admin', method: 'POST', path: '/events/{eventId}/precheckins' },
-    { label: 'admin', method: 'GET', path: '/events/{eventId}/precheckins/{email}' },
     // Custom-stage definitions + responses (cdk#466/#513): the generic stages lane.
     { label: 'admin', method: 'POST', path: '/events/{eventId}/stages' },
     { label: 'admin', method: 'PATCH', path: '/events/{eventId}/stages/{stageId}' },
@@ -70,7 +67,7 @@ exports.ApiRoutes = [
     // identity claim (cdk#438, #373 D2/D3): reconciles the invite-link identity with a
     // verified Google email — bind / merge / chooser-409; same lambda as the exchange.
     // Event-scoped GUEST + public lanes (cdk#427 / #386 SI-5): the URL names the target
-    // event. Guest-authed lanes (rsvp/precheckins/uploads) also validate the token's
+    // event. Guest-authed lanes (rsvp/stages/uploads) also validate the token's
     // guest against the path event server-side; the public lanes take the path event
     // directly. The flat guest forms above retire at the cdk#427 contract step.
     { label: 'public', method: 'POST', path: '/events/{eventId}/auth/exchange' },
@@ -82,8 +79,6 @@ exports.ApiRoutes = [
     { label: 'public', method: 'PUT', path: '/events/{eventId}/survey' },
     { label: 'reservations', method: 'GET', path: '/events/{eventId}/rsvp' },
     { label: 'reservations', method: 'PUT', path: '/events/{eventId}/rsvp' },
-    { label: 'reservations', method: 'GET', path: '/events/{eventId}/precheckins' },
-    { label: 'reservations', method: 'POST', path: '/events/{eventId}/precheckins' },
     // The guest's own custom-stage submission (cdk#466/#513).
     // Open entry + discovery (cdk#468, decision #508): the public quick-RSVP for
     // OPEN events (the handler's preset gate refuses invite-only events) and the

@@ -58,9 +58,6 @@ exports.ApiConstants = {
     // console needs the FULL list, which requires admin auth, so it uses the admin-api
     // mirror (same lambda; the admin authorizer supplies isAdmin -> get_all_rsvps).
     GET_ALL_RSVPS: `${ADMIN_API}/rsvp`,
-    // Pre-checkins — public reservations route for guest link reads + the shangrila POST;
-    // admin-api mirror for the admin console's full-list read (admin-authed).
-    GET_ALL_PRECHECKINS: `${ADMIN_API}/pda-boracay-precheckins`,
     // Save the date
     GET_SAVE_THE_DATE_RECORDS: `${SAVETHEDATE_API}/records`,
     SAVE_THE_DATE_RECORD: `${SAVETHEDATE_API}/record`,
@@ -112,15 +109,13 @@ exports.AdminEventApi = {
     invites: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/invite`,
     scramble: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble`,
     scrambleIncrement: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/scramble/increment`,
-    precheckins: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins`,
     // Custom-stage definitions + the responses grid (cdk#466/#513).
     stages: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages`,
     stage: (eventId, stageId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}`,
     stageResponses: (eventId, stageId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}/responses`,
     // Admin merge-write on ONE guest's stage response (cdk#529) - the room-block
-    // lane's home after the bespoke precheckin routes retire.
+    // lane (the bespoke precheckin routes retired with cdk#529).
     stageResponse: (eventId, stageId, userId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}/responses/${encodeURIComponent(userId)}`,
-    precheckinByEmail: (eventId, email) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/precheckins/${encodeURIComponent(email)}`,
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     assets: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/assets`,
     moments: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
@@ -148,7 +143,7 @@ exports.AccountApi = {
  * Event-scoped GUEST + public endpoints (cdk#427 / #386 SI-5): the URL names the
  * TARGET event — the guest SPA's path-prefix tenant (cdk#447) reaches the API as a
  * path segment, never a server-pinned default. The guest-authed lanes
- * (rsvp/precheckins/uploads) are additionally validated server-side: the token's
+ * (rsvp/stages/uploads) are additionally validated server-side: the token's
  * guest must have a PROFILE row in the path event (fail closed). The public lanes
  * (auth/invite/moments-public/wishes/survey) take the path event directly.
  * The flat ApiConstants forms above remain until the cdk#427 contract step deletes
@@ -164,7 +159,6 @@ exports.GuestEventApi = {
     wishes: (eventId) => `${PUBLIC_API}/events/${encodeURIComponent(eventId)}/wishes`,
     survey: (eventId) => `${PUBLIC_API}/events/${encodeURIComponent(eventId)}/survey`,
     rsvp: (eventId) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/rsvp`,
-    precheckins: (eventId) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/precheckins`,
     // The guest's own custom-stage submission (cdk#466/#513).
     stage: (eventId, stageId) => `${RESERVATIONS_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}`,
     initiateUpload: (eventId) => `${UPLOAD_API}/events/${encodeURIComponent(eventId)}/initiate`,

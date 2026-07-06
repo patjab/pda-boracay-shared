@@ -4,7 +4,6 @@ export declare const ApiConstants: {
     readonly INCREMENT_COUNT_OF_INVITE_SENT: `${string}/scramble/increment`;
     readonly SET_INVITED_BY: `${string}/invite`;
     readonly GET_ALL_RSVPS: `${string}/rsvp`;
-    readonly GET_ALL_PRECHECKINS: `${string}/pda-boracay-precheckins`;
     readonly GET_SAVE_THE_DATE_RECORDS: `${string}/records`;
     readonly SAVE_THE_DATE_RECORD: `${string}/record`;
     readonly GUEST_AUTH: `${string}/guest?guest=`;
@@ -37,12 +36,10 @@ export declare const AdminEventApi: {
     readonly invites: (eventId: string) => string;
     readonly scramble: (eventId: string) => string;
     readonly scrambleIncrement: (eventId: string) => string;
-    readonly precheckins: (eventId: string) => string;
     readonly stages: (eventId: string) => string;
     readonly stage: (eventId: string, stageId: string) => string;
     readonly stageResponses: (eventId: string, stageId: string) => string;
     readonly stageResponse: (eventId: string, stageId: string, userId: string) => string;
-    readonly precheckinByEmail: (eventId: string, email: string) => string;
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     readonly assets: (eventId: string) => string;
     readonly moments: (eventId: string) => string;
@@ -70,7 +67,7 @@ export declare const AccountApi: {
  * Event-scoped GUEST + public endpoints (cdk#427 / #386 SI-5): the URL names the
  * TARGET event — the guest SPA's path-prefix tenant (cdk#447) reaches the API as a
  * path segment, never a server-pinned default. The guest-authed lanes
- * (rsvp/precheckins/uploads) are additionally validated server-side: the token's
+ * (rsvp/stages/uploads) are additionally validated server-side: the token's
  * guest must have a PROFILE row in the path event (fail closed). The public lanes
  * (auth/invite/moments-public/wishes/survey) take the path event directly.
  * The flat ApiConstants forms above remain until the cdk#427 contract step deletes
@@ -85,7 +82,6 @@ export declare const GuestEventApi: {
     readonly wishes: (eventId: string) => string;
     readonly survey: (eventId: string) => string;
     readonly rsvp: (eventId: string) => string;
-    readonly precheckins: (eventId: string) => string;
     readonly stage: (eventId: string, stageId: string) => string;
     readonly initiateUpload: (eventId: string) => string;
     readonly completeUpload: (eventId: string) => string;
