@@ -113,7 +113,7 @@ describe('AdminEventApi contract', () => {
         expect(new URL(url).hostname).toMatch(/^admin-api\./);
     });
 
-    it('two-argument builders place both encoded segments', () => {
+    it('multi-argument builders place every encoded segment', () => {
         expect(resourcePath(AdminEventApi.template('e-1', 't 1'))).toBe('/events/e-1/templates/t%201');
         expect(resourcePath(AdminEventApi.precheckinByEmail('e-1', 'a+b@x.co')))
             .toBe('/events/e-1/precheckins/a%2Bb%40x.co');
