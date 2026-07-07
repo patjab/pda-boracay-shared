@@ -30,11 +30,16 @@ const resolveEnv = (): EnvName => {
  *  change without a full navigation). */
 export const ENV: EnvName = resolveEnv();
 
-/** Legacy boolean — prefer ENV in new code; kept because the host builders
- *  need exactly a boolean while only two environments exist. */
+/** Legacy boolean — prefer ENV in new code. */
 export const isTestEnv: boolean = ENV === 'TEST';
 
-/** The per-environment subdomain marker on platform hosts: '' (prod), '.test'
- *  (testing) — e.g. `valet${ENV_SUBDOMAIN}.boracaya.com`. A future env extends
- *  this alongside HOST_RULES. */
-export const ENV_SUBDOMAIN: string = isTestEnv ? '.test' : '';
+// The per-environment subdomain marker on platform hosts — e.g.
+// `valet${ENV_SUBDOMAIN}.boracaya.com`. Keyed by EnvName so onboarding a
+// future environment is exactly two visible edits: its HOST_RULES row and
+// its marker here (the compiler enforces the second once the union grows).
+const SUBDOMAIN_BY_ENV: Record<EnvName, string> = {
+    PROD: '',
+    TEST: '.test',
+};
+
+export const ENV_SUBDOMAIN: string = SUBDOMAIN_BY_ENV[ENV];
