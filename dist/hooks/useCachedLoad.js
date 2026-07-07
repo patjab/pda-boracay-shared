@@ -15,8 +15,9 @@ const cache_1 = require("../cache");
  *   behaves exactly like useGuardedLoad.
  * - Changing `key` disposes the old handle, which ABORTS the old key's
  *   in-flight fetch — thread the provided AbortSignal into getJson/sendJson.
- * - `reload` re-runs through the cache; after a write, call
- *   invalidateCache(key or prefix) first to force a real refetch.
+ * - `reload` invalidates the key and refetches — it reliably hits the
+ *   network, never a cache no-op. (A write that affects OTHER keys still
+ *   calls invalidateCache(prefix) itself.)
  */
 function useCachedLoad(key, load, errorMessage, opts = {}) {
     var _a;
@@ -53,7 +54,7 @@ function useCachedLoad(key, load, errorMessage, opts = {}) {
         // handle on it would abort and refetch for a copy change.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key, ttlMs]);
-    const reload = (0, react_1.useCallback)(() => { var _a; return (_a = handleRef.current) === null || _a === void 0 ? void 0 : _a.run(); }, []);
+    const reload = (0, react_1.useCallback)(() => { var _a; return (_a = handleRef.current) === null || _a === void 0 ? void 0 : _a.reload(); }, []);
     // When `key` changes, the component renders once BEFORE the effect swaps
     // handles — deriving from the NEW key's cache seed at render time means
     // that frame shows the new key's cached value (or its loading state), never

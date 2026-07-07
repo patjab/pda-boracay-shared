@@ -8,12 +8,14 @@
 // key's in-flight fetch instead of letting it run to completion.
 //
 // It COMPOSES with the existing guarded contract rather than replacing it:
-// the cold-miss path delegates to runGuarded, so loading/error behavior is
-// identical to useGuardedLoad's. The React binding lives in
-// hooks/useCachedLoad.ts; this module is plain TypeScript so the semantics
-// are testable without React and Node consumers stay safe (no window,
-// no storage).
-import { GuardedState, runGuarded } from './data';
+// the cold-miss path implements the same loading/error contract as
+// runGuarded/useGuardedLoad (loading set first, then data or errorMessage,
+// loading always cleared) — inlined only so an INTENTIONAL abort (dispose,
+// key switch, a newer run superseding) is fully silent instead of logging.
+// The React binding lives in hooks/useCachedLoad.ts; this module is plain
+// TypeScript so the semantics are testable without React and Node consumers
+// stay safe (no window, no storage).
+import { GuardedState } from './data';
 
 /**
  * Default freshness window. Sized for the tab-bounce pattern: a value fetched
@@ -30,6 +32,17 @@ interface CacheEntry {
 
 // Module-level so every hook instance (and every screen) shares one cache.
 const entries = new Map<string, CacheEntry>();
+
+/**
+ * Eviction cap. The cache is a screen-bounce accelerator, not a datastore: an
+ * admin session touches tens of eventId+resource keys, so 200 sits far above
+ * any real working set while bounding memory when a long-lived session churns
+ * through many keys. Eviction is least-recently-WRITTEN — Map preserves
+ * insertion order and writeCache re-inserts on every write, so the first key
+ * is always the stalest write. (No read-recency bookkeeping: at tab-bounce
+ * scale a write-LRU is indistinguishable from a full LRU and much simpler.)
+ */
+export const MAX_CACHE_ENTRIES = 200;
 
 /** A cached value plus whether it is still within its freshness window. */
 export interface CacheHit<T> {
@@ -48,9 +61,19 @@ export function readCache<T>(key: string, ttlMs: number = DEFAULT_CACHE_TTL_MS):
   return { value: entry.value as T, isFresh: Date.now() - entry.storedAt < ttlMs };
 }
 
-/** Store a value under a key, restarting its freshness window. */
+/**
+ * Store a value under a key, restarting its freshness window and its write
+ * recency. At MAX_CACHE_ENTRIES the least-recently-written entry is evicted.
+ */
 export function writeCache<T>(key: string, value: T): void {
+  // Delete-then-set moves the key to the back of the Map's insertion order,
+  // so recency follows writes.
+  entries.delete(key);
   entries.set(key, { value, storedAt: Date.now() });
+  if (entries.size > MAX_CACHE_ENTRIES) {
+    const oldest = entries.keys().next().value;
+    if (oldest !== undefined) entries.delete(oldest);
+  }
 }
 
 /**
@@ -108,12 +131,18 @@ export interface CachedLoadOptions<T> {
 
 export interface CachedLoadHandle {
   /**
-   * Run the load for the handle's key: fresh hit → serve with no fetch;
-   * stale hit → serve instantly, revalidate in the background; miss → the
-   * plain guarded contract (loading state, then data or errorMessage).
-   * Also the reload: to force a refetch, invalidateCache(key) first.
+   * Run the load for the handle's key, cache-respecting: fresh hit → serve
+   * with no fetch; stale hit → serve instantly, revalidate in the
+   * background; miss → the guarded contract (loading state, then data or
+   * errorMessage).
    */
   run: () => void;
+  /**
+   * Force a refetch: invalidate the key, then run. This is what a screen's
+   * reload button (and a post-write refresh) means — it must reliably hit
+   * the network, never no-op on a fresh cache entry.
+   */
+  reload: () => void;
   /**
    * Stop writing state and abort any in-flight fetch. Call on unmount or key
    * switch (hooks/useCachedLoad creates one handle per key and disposes the
@@ -183,12 +212,30 @@ export function createCachedLoad<T>(opts: CachedLoadOptions<T>): CachedLoadHandl
       );
       return;
     }
-    // Cold miss: the existing guarded contract, unchanged.
-    void runGuarded(() => startFetch().promise, guardedSet, errorMessage);
+    // Cold miss: the guarded contract (loading set first, then data or the
+    // error message — loading always cleared), handled inline rather than
+    // via runGuarded so an INTENTIONAL abort — dispose/key switch or a newer
+    // run superseding this request — is fully silent: no console output and
+    // no state write (the writes are already sequence-guarded; this consults
+    // the request's own captured signal, per the revalidation path).
+    guardedSet({ data: null, isLoading: true, error: null });
+    const { signal, promise } = startFetch();
+    void promise.then(
+      (value) => guardedSet({ data: value, isLoading: false, error: null }),
+      (e) => {
+        if (signal.aborted) return;
+        console.error(`cache: guarded load failed (${errorMessage}):`, e);
+        guardedSet({ data: null, isLoading: false, error: errorMessage });
+      },
+    );
   };
 
   return {
     run,
+    reload(): void {
+      invalidateCache(key);
+      run();
+    },
     dispose(): void {
       disposed = true;
       controller?.abort();

@@ -13,6 +13,7 @@ export { ApiError, asArray, clean, getJson, jsonOr, runGuarded, sendJson } from 
 export type { GuardedState } from './data';
 export {
   DEFAULT_CACHE_TTL_MS,
+  MAX_CACHE_ENTRIES,
   createCachedLoad,
   invalidateCache,
   readCache,

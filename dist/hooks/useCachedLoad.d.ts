@@ -11,8 +11,9 @@ import { GuardedState } from '../data';
  *   behaves exactly like useGuardedLoad.
  * - Changing `key` disposes the old handle, which ABORTS the old key's
  *   in-flight fetch — thread the provided AbortSignal into getJson/sendJson.
- * - `reload` re-runs through the cache; after a write, call
- *   invalidateCache(key or prefix) first to force a real refetch.
+ * - `reload` invalidates the key and refetches — it reliably hits the
+ *   network, never a cache no-op. (A write that affects OTHER keys still
+ *   calls invalidateCache(prefix) itself.)
  */
 export declare function useCachedLoad<T>(key: string, load: (signal: AbortSignal) => Promise<T>, errorMessage: string, opts?: {
     ttlMs?: number;

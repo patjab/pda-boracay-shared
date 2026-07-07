@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_CACHE_TTL_MS,
+  MAX_CACHE_ENTRIES,
   createCachedLoad,
   invalidateCache,
   readCache,
@@ -104,6 +105,18 @@ describe('the cache store', () => {
     expect(seedFromCache('e1/guests', 10 ** 9)).toEqual({ data: ['a'], isLoading: false, error: null });
   });
 
+  it('evicts the least-recently-WRITTEN entry at the cap; a re-written key survives', () => {
+    for (let i = 0; i < MAX_CACHE_ENTRIES; i += 1) writeCache(`k${i}/x`, i);
+    // Re-writing k0 refreshes its write recency — it is no longer the oldest.
+    writeCache('k0/x', 'rewritten');
+    // The cap+1-th distinct key evicts the oldest write: now k1, not k0.
+    writeCache('overflow/x', 'new');
+    expect(readCache('k0/x')?.value).toBe('rewritten');
+    expect(readCache('k1/x')).toBeUndefined();
+    expect(readCache('overflow/x')?.value).toBe('new');
+    expect(readCache('k2/x')).toBeDefined();
+  });
+
   it('resetCache clears everything', () => {
     writeCache('a', 1);
     writeCache('b', 2);
@@ -172,6 +185,38 @@ describe('createCachedLoad', () => {
     await flush();
     expect(seen).toEqual([{ data: 'stale', isLoading: false, error: null }]);
     expect(readCache('k')?.value).toBe('stale');
+  });
+
+  it('disposing mid-COLD-fetch is fully silent: no console.error, state untouched', async () => {
+    const { seen, set } = states<string>();
+    const d = deferredLoad<string>();
+    const handle = createCachedLoad({ key: 'k', load: d.load, set, errorMessage: 'failed' });
+    handle.run(); // cold miss: loading state set, fetch in flight
+    expect(seen).toEqual([{ data: null, isLoading: true, error: null }]);
+
+    handle.dispose(); // key switch / unmount
+    d.calls[0].reject(new DOMException('The operation was aborted', 'AbortError'));
+    await flush();
+    // The intentional abort neither logs nor writes an error state.
+    expect(console.error).not.toHaveBeenCalled();
+    expect(seen).toEqual([{ data: null, isLoading: true, error: null }]);
+    expect(readCache('k')).toBeUndefined();
+  });
+
+  it('reload() forces a real fetch even on a fresh hit (invalidate + run)', async () => {
+    writeCache('e1/guests', ['cached']);
+    const { seen, set } = states<string[]>();
+    const load = vi.fn(async () => ['refetched']);
+    const handle = createCachedLoad({ key: 'e1/guests', load, set, errorMessage: 'failed' });
+    handle.run(); // fresh hit: served from cache, no fetch
+    expect(load).not.toHaveBeenCalled();
+
+    handle.reload(); // must reliably hit the network, never a cache no-op
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(seen.at(-1)).toEqual({ data: null, isLoading: true, error: null });
+    await flush();
+    expect(seen.at(-1)).toEqual({ data: ['refetched'], isLoading: false, error: null });
+    expect(readCache('e1/guests')?.value).toEqual(['refetched']);
   });
 
   it('invalidateCache forces the next run to refetch', async () => {

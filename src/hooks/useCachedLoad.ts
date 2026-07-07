@@ -14,8 +14,9 @@ import { CachedLoadHandle, createCachedLoad, DEFAULT_CACHE_TTL_MS, seedFromCache
  *   behaves exactly like useGuardedLoad.
  * - Changing `key` disposes the old handle, which ABORTS the old key's
  *   in-flight fetch — thread the provided AbortSignal into getJson/sendJson.
- * - `reload` re-runs through the cache; after a write, call
- *   invalidateCache(key or prefix) first to force a real refetch.
+ * - `reload` invalidates the key and refetches — it reliably hits the
+ *   network, never a cache no-op. (A write that affects OTHER keys still
+ *   calls invalidateCache(prefix) itself.)
  */
 export function useCachedLoad<T>(
   key: string,
@@ -60,7 +61,7 @@ export function useCachedLoad<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, ttlMs]);
 
-  const reload = useCallback(() => handleRef.current?.run(), []);
+  const reload = useCallback(() => handleRef.current?.reload(), []);
 
   // When `key` changes, the component renders once BEFORE the effect swaps
   // handles — deriving from the NEW key's cache seed at render time means

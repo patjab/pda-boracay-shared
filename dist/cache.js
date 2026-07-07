@@ -1,28 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_CACHE_TTL_MS = void 0;
+exports.MAX_CACHE_ENTRIES = exports.DEFAULT_CACHE_TTL_MS = void 0;
 exports.readCache = readCache;
 exports.writeCache = writeCache;
 exports.invalidateCache = invalidateCache;
 exports.seedFromCache = seedFromCache;
 exports.resetCache = resetCache;
 exports.createCachedLoad = createCachedLoad;
-// The shared per-event client cache + request-abort primitive (admin#159,
-// Wave 2 of admin#164): every Valet tab bounce today is a cold fetch because
-// each screen hook starts from nothing on mount. This module adds ONE seam on
-// top of the data-access layer (data.ts): a module-level TTL cache keyed by an
-// explicit string key (callers key per eventId+resource, e.g.
-// `${eventId}/guests`), stale-while-revalidate serving, prefix invalidation
-// for writes, and AbortController wiring so switching keys cancels the old
-// key's in-flight fetch instead of letting it run to completion.
-//
-// It COMPOSES with the existing guarded contract rather than replacing it:
-// the cold-miss path delegates to runGuarded, so loading/error behavior is
-// identical to useGuardedLoad's. The React binding lives in
-// hooks/useCachedLoad.ts; this module is plain TypeScript so the semantics
-// are testable without React and Node consumers stay safe (no window,
-// no storage).
-const data_1 = require("./data");
 /**
  * Default freshness window. Sized for the tab-bounce pattern: a value fetched
  * on one screen visit is served instantly on a re-visit within this window
@@ -32,6 +16,16 @@ const data_1 = require("./data");
 exports.DEFAULT_CACHE_TTL_MS = 30000;
 // Module-level so every hook instance (and every screen) shares one cache.
 const entries = new Map();
+/**
+ * Eviction cap. The cache is a screen-bounce accelerator, not a datastore: an
+ * admin session touches tens of eventId+resource keys, so 200 sits far above
+ * any real working set while bounding memory when a long-lived session churns
+ * through many keys. Eviction is least-recently-WRITTEN — Map preserves
+ * insertion order and writeCache re-inserts on every write, so the first key
+ * is always the stalest write. (No read-recency bookkeeping: at tab-bounce
+ * scale a write-LRU is indistinguishable from a full LRU and much simpler.)
+ */
+exports.MAX_CACHE_ENTRIES = 200;
 /**
  * Read a cached value. Entries never expire out of the map — TTL only decides
  * `isFresh` (fresh = serve without fetching; stale = serve AND revalidate),
@@ -43,9 +37,20 @@ function readCache(key, ttlMs = exports.DEFAULT_CACHE_TTL_MS) {
         return undefined;
     return { value: entry.value, isFresh: Date.now() - entry.storedAt < ttlMs };
 }
-/** Store a value under a key, restarting its freshness window. */
+/**
+ * Store a value under a key, restarting its freshness window and its write
+ * recency. At MAX_CACHE_ENTRIES the least-recently-written entry is evicted.
+ */
 function writeCache(key, value) {
+    // Delete-then-set moves the key to the back of the Map's insertion order,
+    // so recency follows writes.
+    entries.delete(key);
     entries.set(key, { value, storedAt: Date.now() });
+    if (entries.size > exports.MAX_CACHE_ENTRIES) {
+        const oldest = entries.keys().next().value;
+        if (oldest !== undefined)
+            entries.delete(oldest);
+    }
 }
 /**
  * Drop the exact key, or — treating '/' as the key segment delimiter — every
@@ -142,11 +147,27 @@ function createCachedLoad(opts) {
             });
             return;
         }
-        // Cold miss: the existing guarded contract, unchanged.
-        void (0, data_1.runGuarded)(() => startFetch().promise, guardedSet, errorMessage);
+        // Cold miss: the guarded contract (loading set first, then data or the
+        // error message — loading always cleared), handled inline rather than
+        // via runGuarded so an INTENTIONAL abort — dispose/key switch or a newer
+        // run superseding this request — is fully silent: no console output and
+        // no state write (the writes are already sequence-guarded; this consults
+        // the request's own captured signal, per the revalidation path).
+        guardedSet({ data: null, isLoading: true, error: null });
+        const { signal, promise } = startFetch();
+        void promise.then((value) => guardedSet({ data: value, isLoading: false, error: null }), (e) => {
+            if (signal.aborted)
+                return;
+            console.error(`cache: guarded load failed (${errorMessage}):`, e);
+            guardedSet({ data: null, isLoading: false, error: errorMessage });
+        });
     };
     return {
         run,
+        reload() {
+            invalidateCache(key);
+            run();
+        },
         dispose() {
             disposed = true;
             controller === null || controller === void 0 ? void 0 : controller.abort();
