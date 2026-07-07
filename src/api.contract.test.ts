@@ -134,7 +134,7 @@ describe('AdminEventApi contract', () => {
 
     it('covers every single-argument builder', () => {
         const singleArg = Object.keys(AdminEventApi).filter(
-            (k) => !['template', 'stage', 'stageResponses', 'stageResponse', 'organizerInvite'].includes(k));
+            (k) => !['template', 'stage', 'stageResponses', 'stageResponse', 'organizerInvite', 'member'].includes(k));
         expect(singleArg.sort()).toEqual(Object.keys(EXPECTED_EVENT_PATHS).sort());
     });
 
@@ -154,6 +154,8 @@ describe('AdminEventApi contract', () => {
             .toBe('/events/e-1/stages/PRECHECKIN/responses/u%2F1');
         expect(resourcePath(AdminEventApi.organizerInvite('e-1', 't/1')))
             .toBe('/events/e-1/invites/t%2F1');
+        expect(resourcePath(AdminEventApi.member('e-1', 'a@b.co')))
+            .toBe('/events/e-1/members/a%40b.co');
     });
 
     it('URI-encodes hostile eventIds instead of restructuring the path', () => {

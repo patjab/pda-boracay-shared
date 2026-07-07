@@ -36,6 +36,11 @@ export const ApiRoutes: readonly ApiRoute[] = [
   { label: 'admin', method: 'GET', path: '/events/{eventId}/invites' },
   // Who administers the event (cdk#536): the memberships by-event GSI's first read.
   { label: 'admin', method: 'GET', path: '/events/{eventId}/members' },
+  // Roster management (cdk#538): role change + remove/leave; OWNER-gated with
+  // the transactional last-OWNER guard server-side. {accountId} = the
+  // NORMALIZED email (no ACCT# prefix in URLs).
+  { label: 'admin', method: 'PATCH', path: '/events/{eventId}/members/{accountId}' },
+  { label: 'admin', method: 'DELETE', path: '/events/{eventId}/members/{accountId}' },
   { label: 'admin', method: 'DELETE', path: '/events/{eventId}/invites/{inviteId}' },
   { label: 'admin', method: 'GET', path: '/invites/{inviteId}' },
   { label: 'admin', method: 'POST', path: '/invites/{inviteId}/accept' },
