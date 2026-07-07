@@ -61,6 +61,14 @@ describe('getJson', () => {
     expect(err.message).toContain('connection reset');
   });
 
+  it('passes an AbortSignal through to fetch (the #159 abort seam)', async () => {
+    fetchMock().mockResolvedValue(jsonResponse({}));
+    const controller = new AbortController();
+    await getJson('https://x/y', { signal: controller.signal });
+    const [, init] = fetchMock().mock.calls[0];
+    expect(init.signal).toBe(controller.signal);
+  });
+
   it('jsonOr returns the fallback when the body is empty', async () => {
     fetchMock().mockResolvedValue(new Response('', { status: 200 }));
     await expect(jsonOr('https://x/y', 'nums', [7])).resolves.toEqual([7]);
@@ -93,6 +101,14 @@ describe('sendJson', () => {
   it('returns undefined for an empty response body', async () => {
     fetchMock().mockResolvedValue(new Response('', { status: 200 }));
     await expect(sendJson('https://x/y', { method: 'PATCH', body: {} })).resolves.toBeUndefined();
+  });
+
+  it('passes an AbortSignal through to fetch (the #159 abort seam)', async () => {
+    fetchMock().mockResolvedValue(jsonResponse({}));
+    const controller = new AbortController();
+    await sendJson('https://x/y', { method: 'POST', body: {}, signal: controller.signal });
+    const [, init] = fetchMock().mock.calls[0];
+    expect(init.signal).toBe(controller.signal);
   });
 
   it("prefers the server's own error message on non-2xx", async () => {
