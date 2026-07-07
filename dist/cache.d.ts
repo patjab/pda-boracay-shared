@@ -20,12 +20,24 @@ export declare function readCache<T>(key: string, ttlMs?: number): CacheHit<T> |
 /** Store a value under a key, restarting its freshness window. */
 export declare function writeCache<T>(key: string, value: T): void;
 /**
- * Drop every entry whose key equals or starts with the argument — pass a full
- * key to invalidate one resource, or a shared prefix (e.g. the eventId) to
- * invalidate everything under an event after a write. The next load for a
- * dropped key is a full cold fetch.
+ * Drop the exact key, or — treating '/' as the key segment delimiter — every
+ * key under the prefix: pass a full key to invalidate one resource, or a bare
+ * segment prefix (e.g. the eventId) to invalidate everything under an event
+ * after a write. Matching is delimiter-bounded, so invalidating 'e1' drops
+ * 'e1' and 'e1/guests' but never 'e10/guests' — which is why keys MUST use
+ * '/' between segments (`${eventId}/guests`). The next load for a dropped
+ * key is a full cold fetch.
  */
 export declare function invalidateCache(keyOrPrefix: string): void;
+/**
+ * The render-time seed for a key, as a pure function: what a screen shows
+ * before (or instead of) any fetch — a cached value (fresh or stale) renders
+ * as data instantly, a miss renders the loading state. hooks/useCachedLoad
+ * derives from this for its initial state AND at render time on a key
+ * switch, so the first render after a key change never flashes the previous
+ * key's data.
+ */
+export declare function seedFromCache<T>(key: string, ttlMs?: number): GuardedState<T>;
 /** Clear the whole cache. For tests (and sign-out-shaped resets). */
 export declare function resetCache(): void;
 export interface CachedLoadOptions<T> {

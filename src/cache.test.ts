@@ -5,6 +5,7 @@ import {
   invalidateCache,
   readCache,
   resetCache,
+  seedFromCache,
   writeCache,
 } from './cache';
 import { GuardedState } from './data';
@@ -31,19 +32,19 @@ const states = <T>() => {
   return { seen, set: (s: GuardedState<T>) => seen.push(s) };
 };
 
-/** A load whose resolution the test controls, capturing the abort signal. */
+/**
+ * A load whose settlement the test controls, capturing the abort signal and
+ * resolvers of EACH call so overlapping requests can settle independently.
+ */
 const deferredLoad = <T>() => {
-  const signals: AbortSignal[] = [];
-  let resolve!: (v: T) => void;
-  let reject!: (e: unknown) => void;
-  const load = vi.fn((signal: AbortSignal) => {
-    signals.push(signal);
-    return new Promise<T>((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
-  });
-  return { load, signals, resolve: (v: T) => resolve(v), reject: (e: unknown) => reject(e) };
+  const calls: { signal: AbortSignal; resolve: (v: T) => void; reject: (e: unknown) => void }[] = [];
+  const load = vi.fn(
+    (signal: AbortSignal) =>
+      new Promise<T>((resolve, reject) => {
+        calls.push({ signal, resolve, reject });
+      }),
+  );
+  return { load, calls };
 };
 
 const flush = () => new Promise<void>((r) => setTimeout(r, 0));
@@ -76,6 +77,31 @@ describe('the cache store', () => {
     invalidateCache('e1');
     expect(readCache('e1/rsvps')).toBeUndefined();
     expect(readCache('e2/guests')).toBeDefined();
+  });
+
+  it("prefix invalidation is '/'-delimiter-bounded: 'e1' never matches into 'e10/...'", () => {
+    writeCache('e1', 'bare');
+    writeCache('e1/guests', 1);
+    writeCache('e10/guests', 2);
+    writeCache('e10', 'bare10');
+    invalidateCache('e1');
+    expect(readCache('e1')).toBeUndefined(); // exact key
+    expect(readCache('e1/guests')).toBeUndefined(); // delimiter-bounded prefix
+    expect(readCache('e10/guests')).toBeDefined(); // NOT a raw startsWith match
+    expect(readCache('e10')).toBeDefined();
+  });
+
+  it('seedFromCache derives the render-time state for a key', () => {
+    // Miss: the loading state.
+    expect(seedFromCache('e1/guests')).toEqual({ data: null, isLoading: true, error: null });
+    // Fresh hit: the cached value as settled data.
+    writeCache('e1/guests', ['a']);
+    expect(seedFromCache('e1/guests')).toEqual({ data: ['a'], isLoading: false, error: null });
+    // Stale hit: still the cached value (stale-while-revalidate serves it).
+    advance(DEFAULT_CACHE_TTL_MS + 1);
+    expect(seedFromCache('e1/guests')).toEqual({ data: ['a'], isLoading: false, error: null });
+    // Per-call TTL override applies (it only affects freshness, not serving).
+    expect(seedFromCache('e1/guests', 10 ** 9)).toEqual({ data: ['a'], isLoading: false, error: null });
   });
 
   it('resetCache clears everything', () => {
@@ -130,7 +156,7 @@ describe('createCachedLoad', () => {
     // the refresh is already in flight.
     expect(seen).toEqual([{ data: ['stale'], isLoading: false, error: null }]);
     expect(d.load).toHaveBeenCalledTimes(1);
-    d.resolve(['fresh']);
+    d.calls[0].resolve(['fresh']);
     await flush();
     expect(seen.at(-1)).toEqual({ data: ['fresh'], isLoading: false, error: null });
     expect(readCache('e1/guests')?.value).toEqual(['fresh']);
@@ -142,7 +168,7 @@ describe('createCachedLoad', () => {
     const { seen, set } = states<string>();
     const d = deferredLoad<string>();
     createCachedLoad({ key: 'k', load: d.load, set, errorMessage: 'failed' }).run();
-    d.reject(new Error('down'));
+    d.calls[0].reject(new Error('down'));
     await flush();
     expect(seen).toEqual([{ data: 'stale', isLoading: false, error: null }]);
     expect(readCache('k')?.value).toBe('stale');
@@ -164,11 +190,11 @@ describe('createCachedLoad', () => {
     const d = deferredLoad<string>();
     const oldHandle = createCachedLoad({ key: 'e1/guests', load: d.load, set: oldKey.set, errorMessage: 'failed' });
     oldHandle.run();
-    expect(d.signals[0].aborted).toBe(false);
+    expect(d.calls[0].signal.aborted).toBe(false);
 
     // What useCachedLoad does when `key` changes: dispose old, run new.
     oldHandle.dispose();
-    expect(d.signals[0].aborted).toBe(true);
+    expect(d.calls[0].signal.aborted).toBe(true);
 
     const newKey = states<string>();
     createCachedLoad({ key: 'e2/guests', load: async () => 'e2', set: newKey.set, errorMessage: 'failed' }).run();
@@ -177,7 +203,7 @@ describe('createCachedLoad', () => {
 
     // The old key's fetch settling late must not write state OR the cache.
     const before = oldKey.seen.length;
-    d.resolve('too late');
+    d.calls[0].resolve('too late');
     await flush();
     expect(oldKey.seen.length).toBe(before);
     expect(readCache('e1/guests')).toBeUndefined();
@@ -189,12 +215,42 @@ describe('createCachedLoad', () => {
     const handle = createCachedLoad({ key: 'k', load: d.load, set, errorMessage: 'failed' });
     handle.run();
     handle.run();
-    expect(d.signals).toHaveLength(2);
-    expect(d.signals[0].aborted).toBe(true);
-    expect(d.signals[1].aborted).toBe(false);
-    d.resolve('second');
+    expect(d.calls).toHaveLength(2);
+    expect(d.calls[0].signal.aborted).toBe(true);
+    expect(d.calls[1].signal.aborted).toBe(false);
+    d.calls[1].resolve('second');
     await flush();
     expect(seen.at(-1)).toEqual({ data: 'second', isLoading: false, error: null });
+  });
+
+  it('a newer run mid-revalidate aborts the older revalidation SILENTLY and completes itself', async () => {
+    writeCache('k', 'stale');
+    advance(DEFAULT_CACHE_TTL_MS + 1);
+    const { seen, set } = states<string>();
+    const d = deferredLoad<string>();
+    const handle = createCachedLoad({ key: 'k', load: d.load, set, errorMessage: 'failed' });
+    handle.run(); // serves stale, revalidation #1 in flight
+    handle.run(); // serves stale again, revalidation #2 aborts #1
+    expect(d.calls).toHaveLength(2);
+    expect(d.calls[0].signal.aborted).toBe(true);
+
+    // #1 settles with the rejection an aborted fetch produces. The handler
+    // must consult #1's OWN signal — not the (unaborted) latest controller —
+    // so this stays silent: no error logged, no state write, no cache write.
+    d.calls[0].reject(new DOMException('The operation was aborted', 'AbortError'));
+    await flush();
+    expect(console.error).not.toHaveBeenCalled();
+    expect(seen).toEqual([
+      { data: 'stale', isLoading: false, error: null },
+      { data: 'stale', isLoading: false, error: null },
+    ]);
+    expect(readCache('k')?.value).toBe('stale');
+
+    // #2 completes normally.
+    d.calls[1].resolve('fresh');
+    await flush();
+    expect(seen.at(-1)).toEqual({ data: 'fresh', isLoading: false, error: null });
+    expect(readCache('k')?.value).toBe('fresh');
   });
 
   it('after resetCache, a previously cached key cold-fetches again', async () => {

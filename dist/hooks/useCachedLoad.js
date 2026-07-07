@@ -21,14 +21,14 @@ const cache_1 = require("../cache");
 function useCachedLoad(key, load, errorMessage, opts = {}) {
     var _a;
     const ttlMs = (_a = opts.ttlMs) !== null && _a !== void 0 ? _a : cache_1.DEFAULT_CACHE_TTL_MS;
-    // Seed from the cache so a cached value paints on the very first render —
-    // no one-frame spinner on a tab bounce.
-    const [state, setState] = (0, react_1.useState)(() => {
-        const hit = (0, cache_1.readCache)(key, ttlMs);
-        return hit
-            ? { data: hit.value, isLoading: false, error: null }
-            : { data: null, isLoading: true, error: null };
-    });
+    // State is stored WITH the key it belongs to. Seeding from the cache means
+    // a cached value paints on the very first render (no one-frame spinner on
+    // a tab bounce), and the key tag lets the render below detect a key switch
+    // before the effect has re-run.
+    const [entry, setEntry] = (0, react_1.useState)(() => ({
+        key,
+        state: (0, cache_1.seedFromCache)(key, ttlMs),
+    }));
     // Always call the latest load, not the one captured when the key last
     // changed — the handle stays per-key, but the loader never goes stale.
     const loadRef = (0, react_1.useRef)(load);
@@ -39,7 +39,7 @@ function useCachedLoad(key, load, errorMessage, opts = {}) {
             key,
             ttlMs,
             load: (signal) => loadRef.current(signal),
-            set: setState,
+            set: (state) => setEntry({ key, state }),
             errorMessage,
         });
         handleRef.current = handle;
@@ -54,5 +54,10 @@ function useCachedLoad(key, load, errorMessage, opts = {}) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key, ttlMs]);
     const reload = (0, react_1.useCallback)(() => { var _a; return (_a = handleRef.current) === null || _a === void 0 ? void 0 : _a.run(); }, []);
+    // When `key` changes, the component renders once BEFORE the effect swaps
+    // handles — deriving from the NEW key's cache seed at render time means
+    // that frame shows the new key's cached value (or its loading state), never
+    // a flash of the previous key's data.
+    const state = entry.key === key ? entry.state : (0, cache_1.seedFromCache)(key, ttlMs);
     return { ...state, reload };
 }

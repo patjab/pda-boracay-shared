@@ -103,6 +103,14 @@ describe('sendJson', () => {
     await expect(sendJson('https://x/y', { method: 'PATCH', body: {} })).resolves.toBeUndefined();
   });
 
+  it('passes an AbortSignal through to fetch (the #159 abort seam)', async () => {
+    fetchMock().mockResolvedValue(jsonResponse({}));
+    const controller = new AbortController();
+    await sendJson('https://x/y', { method: 'POST', body: {}, signal: controller.signal });
+    const [, init] = fetchMock().mock.calls[0];
+    expect(init.signal).toBe(controller.signal);
+  });
+
   it("prefers the server's own error message on non-2xx", async () => {
     fetchMock().mockResolvedValue(jsonResponse({ error: 'A template with that name already exists.' }, 409));
     const err = await sendJson('https://x/y', { method: 'PUT', body: {}, label: 'create' }).catch((e) => e);

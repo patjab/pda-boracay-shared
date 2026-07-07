@@ -17,6 +17,7 @@ export {
   invalidateCache,
   readCache,
   resetCache,
+  seedFromCache,
   writeCache,
 } from './cache';
 export type { CacheHit, CachedLoadHandle, CachedLoadOptions } from './cache';

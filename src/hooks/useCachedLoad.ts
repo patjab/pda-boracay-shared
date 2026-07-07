@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GuardedState } from '../data';
-import { CachedLoadHandle, createCachedLoad, DEFAULT_CACHE_TTL_MS, readCache } from '../cache';
+import { CachedLoadHandle, createCachedLoad, DEFAULT_CACHE_TTL_MS, seedFromCache } from '../cache';
 
 /**
  * The cache-aware sibling of useGuardedLoad (admin#159): same signature shape
@@ -24,14 +24,14 @@ export function useCachedLoad<T>(
   opts: { ttlMs?: number } = {},
 ): GuardedState<T> & { reload: () => void } {
   const ttlMs = opts.ttlMs ?? DEFAULT_CACHE_TTL_MS;
-  // Seed from the cache so a cached value paints on the very first render —
-  // no one-frame spinner on a tab bounce.
-  const [state, setState] = useState<GuardedState<T>>(() => {
-    const hit = readCache<T>(key, ttlMs);
-    return hit
-      ? { data: hit.value, isLoading: false, error: null }
-      : { data: null, isLoading: true, error: null };
-  });
+  // State is stored WITH the key it belongs to. Seeding from the cache means
+  // a cached value paints on the very first render (no one-frame spinner on
+  // a tab bounce), and the key tag lets the render below detect a key switch
+  // before the effect has re-run.
+  const [entry, setEntry] = useState<{ key: string; state: GuardedState<T> }>(() => ({
+    key,
+    state: seedFromCache<T>(key, ttlMs),
+  }));
 
   // Always call the latest load, not the one captured when the key last
   // changed — the handle stays per-key, but the loader never goes stale.
@@ -45,7 +45,7 @@ export function useCachedLoad<T>(
       key,
       ttlMs,
       load: (signal) => loadRef.current(signal),
-      set: setState,
+      set: (state) => setEntry({ key, state }),
       errorMessage,
     });
     handleRef.current = handle;
@@ -61,6 +61,12 @@ export function useCachedLoad<T>(
   }, [key, ttlMs]);
 
   const reload = useCallback(() => handleRef.current?.run(), []);
+
+  // When `key` changes, the component renders once BEFORE the effect swaps
+  // handles — deriving from the NEW key's cache seed at render time means
+  // that frame shows the new key's cached value (or its loading state), never
+  // a flash of the previous key's data.
+  const state = entry.key === key ? entry.state : seedFromCache<T>(key, ttlMs);
 
   return { ...state, reload };
 }
