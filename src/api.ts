@@ -132,6 +132,8 @@ export const AdminEventApi = {
         `${ADMIN_API}/events/${encodeURIComponent(eventId)}/stages/${encodeURIComponent(stageId)}/responses/${encodeURIComponent(userId)}`,
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     assets: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/assets`,
+    /** Organizer image unlink (cdk#707): DELETE clears the field + deletes the S3 object. */
+    image: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/image`,
     moments: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
     momentsPublic: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/public`,
     templates: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates`,

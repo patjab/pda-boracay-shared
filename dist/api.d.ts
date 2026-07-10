@@ -36,6 +36,8 @@ export declare const AdminEventApi: {
     readonly stageResponse: (eventId: string, stageId: string, userId: string) => string;
     /** Organizer asset-upload presign (cdk#394): admin-authorized, tenant-prefixed key. */
     readonly assets: (eventId: string) => string;
+    /** Organizer image unlink (cdk#707): DELETE clears the field + deletes the S3 object. */
+    readonly image: (eventId: string) => string;
     readonly moments: (eventId: string) => string;
     readonly momentsPublic: (eventId: string) => string;
     readonly templates: (eventId: string) => string;
