@@ -71,6 +71,10 @@ exports.ApiRoutes = [
     // membership edge atomically; DELETE is a soft-archive (cdk#442 D1).
     { label: 'admin', method: 'POST', path: '/events' },
     { label: 'admin', method: 'DELETE', path: '/events/{eventId}' },
+    // Organizer image unlink (cdk#707): deletes the backing share-bucket object AND
+    // clears the metadata field (hero / post-event). Explicit destructive lane, body
+    // names which field — distinct from the generic PATCH that only edits references.
+    { label: 'admin', method: 'DELETE', path: '/events/{eventId}/image' },
     { label: 'admin', method: 'GET', path: '/events/{eventId}' },
     { label: 'admin', method: 'PUT', path: '/events/{eventId}/about' },
     { label: 'admin', method: 'PATCH', path: '/events/{eventId}' },

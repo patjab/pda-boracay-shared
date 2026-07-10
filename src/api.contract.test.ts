@@ -113,6 +113,7 @@ describe('AdminEventApi contract', () => {
         scrambleIncrement: '/events/e-1/scramble/increment',
         stages: '/events/e-1/stages',
         assets: '/events/e-1/assets',
+        image: '/events/e-1/image',
         moments: '/events/e-1/moments',
         momentsPublic: '/events/e-1/moments/public',
         templates: '/events/e-1/templates',
