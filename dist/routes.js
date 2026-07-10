@@ -12,8 +12,8 @@ exports.ApiRoutes = [
     // Event-scoped admin lanes (cdk#396 / admin#101): the URL names the target event,
     // the JWT + server-side membership check authorizes it (the shipped About pattern).
     // The flat legacy admin forms were REMOVED (cdk#405) once the Valet migration
-    // (admin#104) stopped calling them; POST / (geo-IP proxy) stays — it is not
-    // event data.
+    // (admin#104) stopped calling them; POST / (the geo-IP proxy) followed in
+    // cdk#594 when the Monitor rework orphaned it — no flat routes remain.
     { label: 'admin', method: 'GET', path: '/events/{eventId}/rsvp' },
     // Composed, preset-resolved roster (cdk#575): identity + rsvp + stage rows in one
     // read; exclusivus items carry the invitation vocabulary, inclusivus items omit it.

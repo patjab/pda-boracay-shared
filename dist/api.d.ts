@@ -13,8 +13,8 @@ export declare const ApiConstants: {
  * the caller's Google ID token plus the server-side membership check authorize it
  * (the shipped About-PUT pattern, generalized). One builder per lane so no consumer
  * ever hand-assembles a path; eventId/templateId/email are URI-encoded here.
- * The flat ApiConstants forms above remain until the Valet migration completes
- * (cdk#405 removes them).
+ * The flat ApiConstants forms are GONE (cdk#405 / shared#57) — every admin call
+ * rides these event-scoped builders.
  */
 export declare const AdminEventApi: {
     readonly config: (eventId: string) => string;
