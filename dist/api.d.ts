@@ -1,5 +1,4 @@
 export declare const ApiConstants: {
-    readonly GET_IP_ADDRESSES: string;
     readonly ADMIN_EVENTS: `${string}/events`;
     readonly EVENTS: `${string}/events`;
     readonly DISCOVER: `${string}/discover`;
@@ -19,11 +18,9 @@ export declare const ApiConstants: {
  */
 export declare const AdminEventApi: {
     readonly config: (eventId: string) => string;
-    readonly pagesOrder: (eventId: string) => string;
     readonly about: (eventId: string) => string;
     readonly rsvps: (eventId: string) => string;
     readonly roster: (eventId: string) => string;
-    readonly invites: (eventId: string) => string;
     readonly organizerInvites: (eventId: string) => string;
     readonly members: (eventId: string) => string;
     readonly member: (eventId: string, accountId: string) => string;
@@ -44,7 +41,6 @@ export declare const AdminEventApi: {
     readonly template: (eventId: string, templateId: string) => string;
     readonly emailTemplate: (eventId: string) => string;
     readonly surveys: (eventId: string) => string;
-    readonly surveyCounts: (eventId: string) => string;
 };
 /**
  * Account/registration lane (cdk#387, decision cdk#464): identity-level admin-api
