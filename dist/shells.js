@@ -11,7 +11,7 @@
  * exactly one place.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FALLBACK_DEFAULTS = exports.OCCASION_DEFAULTS = exports.CURATED_DESIGNS = exports.STYLE_TIERS = exports.SHELL_KEYS = void 0;
+exports.FALLBACK_DEFAULTS = exports.OCCASION_DEFAULTS = exports.TYPE_VOICES = exports.CURATED_DESIGNS = exports.STYLE_TIERS = exports.SHELL_KEYS = void 0;
 exports.SHELL_KEYS = [
     'classic',
     'invitation',
@@ -29,6 +29,8 @@ exports.CURATED_DESIGNS = [
     'restrained',
     'champagne-formal',
 ];
+/** The generated tier's curated type pairings (D6). */
+exports.TYPE_VOICES = ['elegant', 'bold', 'playful', 'mono', 'script', 'clean'];
 /**
  * The wizard's occasion quick-pick (D14): one tap applies a persona's D4
  * defaults; everything stays overridable, nothing here persists as an

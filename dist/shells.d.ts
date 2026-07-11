@@ -16,16 +16,47 @@ export type StyleTier = (typeof STYLE_TIERS)[number];
 /** The curated launch collection (D6). designId values the resolver ships. */
 export declare const CURATED_DESIGNS: readonly ["deco", "fiesta", "quiet-formal", "restrained", "champagne-formal"];
 export type CuratedDesignId = (typeof CURATED_DESIGNS)[number];
-export interface StyleConfig {
-    tier: StyleTier;
-    /** Organizer inputs per tier (D6): generated {accent|photo, typeVoice,
-     * energy} · curated {designId} · content {accent, assetKey?} · brand
-     * {accent, secondary?, logoAssetKey?}. Free-shaped by design — the config
-     * handler only enforces object-ness; the resolver owns interpretation. */
-    inputs?: Record<string, unknown>;
-    /** Resolved CSS custom properties, stored at save time where possible. */
-    resolved?: Record<string, string>;
-}
+/** The generated tier's curated type pairings (D6). */
+export declare const TYPE_VOICES: readonly ["elegant", "bold", "playful", "mono", "script", "clean"];
+export type TypeVoice = (typeof TYPE_VOICES)[number];
+/** Resolved CSS custom properties, stored at save time where possible. */
+export type ResolvedTokens = Record<string, string>;
+/**
+ * Tier-discriminated style config (D6): consumers narrow on `tier` and get
+ * the documented input shape. All inputs optional — the resolver owns
+ * fallbacks; the config handler only enforces object-ness (cdk#743).
+ */
+export type StyleConfig = {
+    tier: 'generated';
+    inputs?: {
+        accent?: string;
+        photoAssetKey?: string;
+        typeVoice?: TypeVoice;
+        energy?: number;
+    };
+    resolved?: ResolvedTokens;
+} | {
+    tier: 'curated';
+    inputs?: {
+        designId?: CuratedDesignId;
+    };
+    resolved?: ResolvedTokens;
+} | {
+    tier: 'content';
+    inputs?: {
+        accent?: string;
+        assetKey?: string;
+    };
+    resolved?: ResolvedTokens;
+} | {
+    tier: 'brand';
+    inputs?: {
+        accent?: string;
+        secondary?: string;
+        logoAssetKey?: string;
+    };
+    resolved?: ResolvedTokens;
+};
 export interface ShellStyleDefaults {
     shell: ShellKey;
     style: StyleConfig;
@@ -42,7 +73,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "curated";
             inputs: {
-                designId: string;
+                designId: "deco";
             };
         };
     };
@@ -51,7 +82,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "curated";
             inputs: {
-                designId: string;
+                designId: "fiesta";
             };
         };
     };
@@ -60,7 +91,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "curated";
             inputs: {
-                designId: string;
+                designId: "quiet-formal";
             };
         };
     };
@@ -83,7 +114,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "clean";
                 energy: number;
             };
         };
@@ -93,7 +124,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "bold";
                 energy: number;
             };
         };
@@ -103,7 +134,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "playful";
                 energy: number;
             };
         };
@@ -113,7 +144,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "bold";
                 energy: number;
             };
         };
@@ -123,7 +154,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "bold";
                 energy: number;
             };
         };
@@ -133,7 +164,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "playful";
                 energy: number;
             };
         };
@@ -157,7 +188,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "clean";
                 energy: number;
             };
         };
@@ -167,7 +198,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "generated";
             inputs: {
-                typeVoice: string;
+                typeVoice: "clean";
                 energy: number;
             };
         };
@@ -177,7 +208,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "curated";
             inputs: {
-                designId: string;
+                designId: "restrained";
             };
         };
     };
@@ -186,7 +217,7 @@ export declare const OCCASION_DEFAULTS: {
         style: {
             tier: "curated";
             inputs: {
-                designId: string;
+                designId: "restrained";
             };
         };
     };

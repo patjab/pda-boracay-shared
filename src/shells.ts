@@ -33,16 +33,23 @@ export const CURATED_DESIGNS = [
 ] as const;
 export type CuratedDesignId = (typeof CURATED_DESIGNS)[number];
 
-export interface StyleConfig {
-  tier: StyleTier;
-  /** Organizer inputs per tier (D6): generated {accent|photo, typeVoice,
-   * energy} · curated {designId} · content {accent, assetKey?} · brand
-   * {accent, secondary?, logoAssetKey?}. Free-shaped by design — the config
-   * handler only enforces object-ness; the resolver owns interpretation. */
-  inputs?: Record<string, unknown>;
-  /** Resolved CSS custom properties, stored at save time where possible. */
-  resolved?: Record<string, string>;
-}
+/** The generated tier's curated type pairings (D6). */
+export const TYPE_VOICES = ['elegant', 'bold', 'playful', 'mono', 'script', 'clean'] as const;
+export type TypeVoice = (typeof TYPE_VOICES)[number];
+
+/** Resolved CSS custom properties, stored at save time where possible. */
+export type ResolvedTokens = Record<string, string>;
+
+/**
+ * Tier-discriminated style config (D6): consumers narrow on `tier` and get
+ * the documented input shape. All inputs optional — the resolver owns
+ * fallbacks; the config handler only enforces object-ness (cdk#743).
+ */
+export type StyleConfig =
+  | { tier: 'generated'; inputs?: { accent?: string; photoAssetKey?: string; typeVoice?: TypeVoice; energy?: number }; resolved?: ResolvedTokens }
+  | { tier: 'curated'; inputs?: { designId?: CuratedDesignId }; resolved?: ResolvedTokens }
+  | { tier: 'content'; inputs?: { accent?: string; assetKey?: string }; resolved?: ResolvedTokens }
+  | { tier: 'brand'; inputs?: { accent?: string; secondary?: string; logoAssetKey?: string }; resolved?: ResolvedTokens };
 
 export interface ShellStyleDefaults {
   shell: ShellKey;

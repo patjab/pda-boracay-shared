@@ -23,8 +23,10 @@ describe('occasion defaults (cdk#739 D4/D14)', () => {
   });
 
   it('curated defaults reference designs in the launch collection', () => {
-    for (const d of all.filter((x) => x.style.tier === 'curated')) {
-      expect(CURATED_DESIGNS).toContain(d.style.inputs?.designId);
+    for (const d of all) {
+      if (d.style.tier === 'curated') {
+        expect(CURATED_DESIGNS).toContain(d.style.inputs?.designId);
+      }
     }
   });
 
@@ -37,8 +39,8 @@ describe('occasion defaults (cdk#739 D4/D14)', () => {
   });
 
   it('solemn occasions default to the restrained design (D18 register)', () => {
-    expect(OCCASION_DEFAULTS['funeral'].style.inputs?.designId).toBe('restrained');
-    expect(OCCASION_DEFAULTS['celebration-of-life'].style.inputs?.designId).toBe('restrained');
+    expect(OCCASION_DEFAULTS.funeral.style.inputs.designId).toBe('restrained');
+    expect(OCCASION_DEFAULTS['celebration-of-life'].style.inputs.designId).toBe('restrained');
   });
 
   it('the no-pick fallback is classic (absence-is-fallback everywhere)', () => {
