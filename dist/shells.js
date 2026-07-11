@@ -19,6 +19,9 @@ exports.SHELL_KEYS = [
     'poster',
     'itinerary',
     'program',
+    // The full-website grammar as an explicit pick (cdk#776 D25): same chrome
+    // classic wraps, but chosen — classic stays the frozen absence-fallback.
+    'site',
 ];
 exports.STYLE_TIERS = ['generated', 'curated', 'content', 'brand'];
 /** The curated launch collection (D6). designId values the resolver ships. */

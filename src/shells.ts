@@ -17,6 +17,9 @@ export const SHELL_KEYS = [
   'poster',
   'itinerary',
   'program',
+  // The full-website grammar as an explicit pick (cdk#776 D25): same chrome
+  // classic wraps, but chosen — classic stays the frozen absence-fallback.
+  'site',
 ] as const;
 export type ShellKey = (typeof SHELL_KEYS)[number];
 
@@ -99,3 +102,20 @@ export const FALLBACK_DEFAULTS: ShellStyleDefaults = {
   shell: 'classic',
   style: { tier: 'generated', inputs: {} },
 };
+
+/**
+ * Per-event chrome/module copy (cdk#776 D26): the engine's defaults are
+ * GENERIC; an event opts into its own voice (the wedding tenant carries the
+ * wedding words). All optional — absent key = the generic default, decided
+ * where the copy renders (the guest app owns fallbacks).
+ */
+export interface Vocabulary {
+  /** Header fallback when no display name is configured. */
+  siteFallbackName?: string;
+  /** Heading over the RSVP countdown. */
+  countdownLabel?: string;
+  /** Guestbook form heading; supports the event display name where it renders. */
+  guestbookCtaLabel?: string;
+  /** The no-link identity notice's "contact" phrasing. */
+  contactHostNotice?: string;
+}
