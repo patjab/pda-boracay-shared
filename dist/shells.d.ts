@@ -19,6 +19,15 @@ export type CuratedDesignId = (typeof CURATED_DESIGNS)[number];
 /** The generated tier's curated type pairings (D6). */
 export declare const TYPE_VOICES: readonly ["elegant", "bold", "playful", "mono", "script", "clean"];
 export type TypeVoice = (typeof TYPE_VOICES)[number];
+/**
+ * The generated tier's page ground (D19): light or dark canvas. A separate
+ * input because lightness is NOT derivable from the accent or the energy
+ * slider (a 0.9-energy block party wants a sunlit page; a 0.9-energy night
+ * out wants neon on black). Absent = dark — pre-D19 generated configs keep
+ * rendering exactly as they did.
+ */
+export declare const STYLE_MODES: readonly ["dark", "light"];
+export type StyleMode = (typeof STYLE_MODES)[number];
 /** Resolved CSS custom properties, stored at save time where possible. */
 export type ResolvedTokens = Record<string, string>;
 /**
@@ -33,6 +42,7 @@ export type StyleConfig = {
         photoAssetKey?: string;
         typeVoice?: TypeVoice;
         energy?: number;
+        mode?: StyleMode;
     };
     resolved?: ResolvedTokens;
 } | {
@@ -166,6 +176,7 @@ export declare const OCCASION_DEFAULTS: {
             inputs: {
                 typeVoice: "playful";
                 energy: number;
+                mode: "light";
             };
         };
     };
@@ -200,6 +211,7 @@ export declare const OCCASION_DEFAULTS: {
             inputs: {
                 typeVoice: "clean";
                 energy: number;
+                mode: "light";
             };
         };
     };
