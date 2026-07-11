@@ -9,7 +9,7 @@
  * module exists so both UIs speak one vocabulary and the defaults live in
  * exactly one place.
  */
-export declare const SHELL_KEYS: readonly ["classic", "invitation", "board", "poster", "itinerary", "program"];
+export declare const SHELL_KEYS: readonly ["classic", "invitation", "board", "poster", "itinerary", "program", "site"];
 export type ShellKey = (typeof SHELL_KEYS)[number];
 export declare const STYLE_TIERS: readonly ["generated", "curated", "content", "brand"];
 export type StyleTier = (typeof STYLE_TIERS)[number];
@@ -237,3 +237,19 @@ export declare const OCCASION_DEFAULTS: {
 export type OccasionKey = keyof typeof OCCASION_DEFAULTS;
 /** "Something else" / no pick: today's layout, style chosen later. */
 export declare const FALLBACK_DEFAULTS: ShellStyleDefaults;
+/**
+ * Per-event chrome/module copy (cdk#776 D26): the engine's defaults are
+ * GENERIC; an event opts into its own voice (the wedding tenant carries the
+ * wedding words). All optional — absent key = the generic default, decided
+ * where the copy renders (the guest app owns fallbacks).
+ */
+export interface Vocabulary {
+    /** Header fallback when no display name is configured. */
+    siteFallbackName?: string;
+    /** Heading over the RSVP countdown. */
+    countdownLabel?: string;
+    /** Guestbook form heading; supports the event display name where it renders. */
+    guestbookCtaLabel?: string;
+    /** The no-link identity notice's "contact" phrasing. */
+    contactHostNotice?: string;
+}
