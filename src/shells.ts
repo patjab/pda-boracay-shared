@@ -37,6 +37,16 @@ export type CuratedDesignId = (typeof CURATED_DESIGNS)[number];
 export const TYPE_VOICES = ['elegant', 'bold', 'playful', 'mono', 'script', 'clean'] as const;
 export type TypeVoice = (typeof TYPE_VOICES)[number];
 
+/**
+ * The generated tier's page ground (D19): light or dark canvas. A separate
+ * input because lightness is NOT derivable from the accent or the energy
+ * slider (a 0.9-energy block party wants a sunlit page; a 0.9-energy night
+ * out wants neon on black). Absent = dark — pre-D19 generated configs keep
+ * rendering exactly as they did.
+ */
+export const STYLE_MODES = ['dark', 'light'] as const;
+export type StyleMode = (typeof STYLE_MODES)[number];
+
 /** Resolved CSS custom properties, stored at save time where possible. */
 export type ResolvedTokens = Record<string, string>;
 
@@ -46,7 +56,7 @@ export type ResolvedTokens = Record<string, string>;
  * fallbacks; the config handler only enforces object-ness (cdk#743).
  */
 export type StyleConfig =
-  | { tier: 'generated'; inputs?: { accent?: string; photoAssetKey?: string; typeVoice?: TypeVoice; energy?: number }; resolved?: ResolvedTokens }
+  | { tier: 'generated'; inputs?: { accent?: string; photoAssetKey?: string; typeVoice?: TypeVoice; energy?: number; mode?: StyleMode }; resolved?: ResolvedTokens }
   | { tier: 'curated'; inputs?: { designId?: CuratedDesignId }; resolved?: ResolvedTokens }
   | { tier: 'content'; inputs?: { accent?: string; assetKey?: string }; resolved?: ResolvedTokens }
   | { tier: 'brand'; inputs?: { accent?: string; secondary?: string; logoAssetKey?: string }; resolved?: ResolvedTokens };
@@ -73,11 +83,11 @@ export const OCCASION_DEFAULTS = {
   meetup: { shell: 'board', style: { tier: 'generated', inputs: { typeVoice: 'playful', energy: 0.8 } } },
   class: { shell: 'poster', style: { tier: 'generated', inputs: { typeVoice: 'bold', energy: 0.7 } } },
   'fun-run': { shell: 'poster', style: { tier: 'generated', inputs: { typeVoice: 'bold', energy: 0.8 } } },
-  'block-party': { shell: 'poster', style: { tier: 'generated', inputs: { typeVoice: 'playful', energy: 0.9 } } },
+  'block-party': { shell: 'poster', style: { tier: 'generated', inputs: { typeVoice: 'playful', energy: 0.9, mode: 'light' } } },
   'grand-opening': { shell: 'poster', style: { tier: 'brand', inputs: {} } },
   cupsleeve: { shell: 'poster', style: { tier: 'content', inputs: {} } },
   trip: { shell: 'itinerary', style: { tier: 'generated', inputs: { typeVoice: 'clean', energy: 0.5 } } },
-  reunion: { shell: 'itinerary', style: { tier: 'generated', inputs: { typeVoice: 'clean', energy: 0.4 } } },
+  reunion: { shell: 'itinerary', style: { tier: 'generated', inputs: { typeVoice: 'clean', energy: 0.4, mode: 'light' } } },
   'celebration-of-life': { shell: 'program', style: { tier: 'curated', inputs: { designId: 'restrained' } } },
   funeral: { shell: 'program', style: { tier: 'curated', inputs: { designId: 'restrained' } } },
 } satisfies Record<string, ShellStyleDefaults>;

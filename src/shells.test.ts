@@ -9,6 +9,7 @@ import {
   FALLBACK_DEFAULTS,
   OCCASION_DEFAULTS,
   SHELL_KEYS,
+  STYLE_MODES,
   STYLE_TIERS,
 } from './shells';
 
@@ -45,5 +46,16 @@ describe('occasion defaults (cdk#739 D4/D14)', () => {
 
   it('the no-pick fallback is classic (absence-is-fallback everywhere)', () => {
     expect(FALLBACK_DEFAULTS.shell).toBe('classic');
+  });
+
+  it('generated modes are valid; only sunlit occasions opt into light (D19)', () => {
+    for (const [key, d] of Object.entries(OCCASION_DEFAULTS)) {
+      if (d.style.tier === 'generated' && d.style.inputs && 'mode' in d.style.inputs) {
+        expect(STYLE_MODES).toContain(d.style.inputs.mode);
+        expect(['block-party', 'reunion']).toContain(key);
+      }
+    }
+    expect(OCCASION_DEFAULTS['block-party'].style.inputs.mode).toBe('light');
+    expect(OCCASION_DEFAULTS.reunion.style.inputs.mode).toBe('light');
   });
 });
