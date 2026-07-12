@@ -121,6 +121,9 @@ exports.AdminEventApi = {
     image: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/image`,
     moments: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
     momentsPublic: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/public`,
+    // Host album uploads (cdk#790): presign, then confirm writes the approved row.
+    momentsUpload: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/upload`,
+    momentsConfirm: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/confirm`,
     templates: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates`,
     template: (eventId, templateId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates/${encodeURIComponent(templateId)}`,
     emailTemplate: (eventId) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/email-template`,

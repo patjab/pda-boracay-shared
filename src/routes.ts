@@ -60,6 +60,9 @@ export const ApiRoutes: readonly ApiRoute[] = [
   { label: 'admin', method: 'GET', path: '/events/{eventId}/moments' },
   { label: 'admin', method: 'PATCH', path: '/events/{eventId}/moments' },
   { label: 'admin', method: 'GET', path: '/events/{eventId}/moments/public' },
+  // Host album uploads (cdk#790 A2/A3): presign into the gallery prefix + row write.
+  { label: 'admin', method: 'POST', path: '/events/{eventId}/moments/upload' },
+  { label: 'admin', method: 'POST', path: '/events/{eventId}/moments/confirm' },
   { label: 'admin', method: 'GET', path: '/events/{eventId}/templates' },
   { label: 'admin', method: 'PUT', path: '/events/{eventId}/templates' },
   { label: 'admin', method: 'PATCH', path: '/events/{eventId}/templates' },

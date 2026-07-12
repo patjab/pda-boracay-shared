@@ -135,6 +135,9 @@ export const AdminEventApi = {
     image: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/image`,
     moments: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments`,
     momentsPublic: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/public`,
+    // Host album uploads (cdk#790): presign, then confirm writes the approved row.
+    momentsUpload: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/upload`,
+    momentsConfirm: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/moments/confirm`,
     templates: (eventId: string) => `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates`,
     template: (eventId: string, templateId: string) =>
         `${ADMIN_API}/events/${encodeURIComponent(eventId)}/templates/${encodeURIComponent(templateId)}`,
