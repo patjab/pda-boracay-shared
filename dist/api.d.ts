@@ -37,6 +37,8 @@ export declare const AdminEventApi: {
     readonly image: (eventId: string) => string;
     readonly moments: (eventId: string) => string;
     readonly momentsPublic: (eventId: string) => string;
+    readonly momentsUpload: (eventId: string) => string;
+    readonly momentsConfirm: (eventId: string) => string;
     readonly templates: (eventId: string) => string;
     readonly template: (eventId: string, templateId: string) => string;
     readonly emailTemplate: (eventId: string) => string;
