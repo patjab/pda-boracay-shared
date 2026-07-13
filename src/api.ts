@@ -174,8 +174,23 @@ export const FacesApi = {
     list: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces`,
     ingest: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/ingest`,
     merge: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/merge`,
+    // Face-level curation (epic cdk#815, SI-1 cdk#816): split faces to a new
+    // person, remove faces from / delete a person — PATCH person renames,
+    // DELETE person deletes the group.
+    split: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/split`,
     person: (eventId: string, personId: string) =>
         `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/persons/${encodeURIComponent(personId)}`,
+    removeFaces: (eventId: string, personId: string) =>
+        `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/persons/${encodeURIComponent(personId)}/remove-faces`,
+    // Box-emitted curation queues (epic cdk#815, SI-2 cdk#817): merge
+    // suggestions + the unmatched-face pile, and the acts on each.
+    suggestions: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/suggestions`,
+    dismissSuggestion: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/suggestions/dismiss`,
+    unmatched: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/unmatched`,
+    assignUnmatched: (eventId: string, faceId: string) =>
+        `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/unmatched/${encodeURIComponent(faceId)}/assign`,
+    dismissUnmatched: (eventId: string, faceId: string) =>
+        `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/unmatched/${encodeURIComponent(faceId)}/dismiss`,
     people: (eventId: string) => `${FACES_API}/events/${encodeURIComponent(eventId)}/faces/people`,
     // One-click recognition runs (cdk#796): admin enqueue/status + the box's
     // queue lane (bearer = the faces-box secret, not a user token).
