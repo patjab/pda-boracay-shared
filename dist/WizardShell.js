@@ -57,6 +57,10 @@ const WizardShell = ({ steps, finish }) => {
         return null;
     const step = steps[i];
     const last = i === max;
-    return ((0, jsx_runtime_1.jsxs)(Box_1.default, { children: [(0, jsx_runtime_1.jsxs)(Box_1.default, { sx: { mb: 2 }, children: [(0, jsx_runtime_1.jsxs)(Typography_1.default, { variant: "caption", color: "text.secondary", children: [i + 1, " of ", steps.length] }), (0, jsx_runtime_1.jsx)(LinearProgress_1.default, { variant: "determinate", value: ((i + 1) / steps.length) * 100, sx: { mt: 0.5, height: 3, borderRadius: 3 } })] }), (0, jsx_runtime_1.jsx)(Box_1.default, { children: step.content }, step.key), (0, jsx_runtime_1.jsxs)(Box_1.default, { sx: { display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }, children: [i > 0 && ((0, jsx_runtime_1.jsx)(Button_1.default, { variant: "outlined", onClick: () => setIndex(i - 1), children: "Back" })), !last && ((0, jsx_runtime_1.jsx)(Button_1.default, { variant: "contained", disabled: step.canProceed === false, onClick: () => setIndex(i + 1), children: "Next" })), last && finish] })] }));
+    return ((0, jsx_runtime_1.jsxs)(Box_1.default, { children: [(0, jsx_runtime_1.jsxs)(Box_1.default, { sx: { mb: 2 }, children: [(0, jsx_runtime_1.jsxs)(Typography_1.default, { variant: "caption", color: "text.secondary", children: [i + 1, " of ", steps.length] }), (0, jsx_runtime_1.jsx)(LinearProgress_1.default, { variant: "determinate", value: ((i + 1) / steps.length) * 100, sx: { mt: 0.5, height: 3, borderRadius: 3 } })] }), (0, jsx_runtime_1.jsx)(Box_1.default, { children: step.content }, step.key), (0, jsx_runtime_1.jsxs)(Box_1.default, { sx: { display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }, children: [i > 0 && ((0, jsx_runtime_1.jsx)(Button_1.default, { variant: "outlined", onClick: () => setIndex(i - 1), children: "Back" })), !last && ((0, jsx_runtime_1.jsx)(Button_1.default, { variant: "contained", disabled: step.canProceed === false, onClick: () => {
+                            if (step.validate && !step.validate())
+                                return;
+                            setIndex(i + 1);
+                        }, children: "Next" })), last && finish] })] }));
 };
 exports.WizardShell = WizardShell;
