@@ -27,7 +27,40 @@
  *    one later is a registry entry, not a new mechanism.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.stageDriftKeys = exports.resolvePrefillSource = exports.guestDisplayName = exports.STAGE_RESPONSE_META_KEYS = exports.PREFILL_SOURCES = exports.stageQuestions = exports.stageElements = exports.isDisplayBlock = exports.stagePresentation = void 0;
+exports.stageDriftKeys = exports.resolvePrefillSource = exports.guestDisplayName = exports.STAGE_RESPONSE_META_KEYS = exports.PREFILL_SOURCES = exports.stageQuestions = exports.stageElements = exports.isDisplayBlock = exports.stagePresentation = exports.DEFAULT_CORE_STAGE = exports.ATTENDANCE_KEY = exports.CORE_STAGE_ID = void 0;
+// --- The fixed core stage (cdk#1012, decisions cdk#1009 A8-A11) -------------
+/** The reserved id of the core stage — RSVP itself, riding the engine. Fixed
+ *  so every reader uses a static path (stages.RSVP...); pre-reserved in the
+ *  lambda's stage-id denylist since long before this work. */
+exports.CORE_STAGE_ID = 'RSVP';
+/** The core question's fixed key: the platform's knowledge of who's coming.
+ *  Its key and boolean semantics are machine-fixed (undeletable, A11); its
+ *  wording is the host's. */
+exports.ATTENDANCE_KEY = 'isAttending';
+/** The canonical initial core-stage definition (epic #1008 bootstrap): the
+ *  attendance gate, dietary needs, and companions as a repeating group.
+ *  Name/email are IDENTITY, owned by the shell (A6) — deliberately not here.
+ *  The server carries the same literal (its copy is authoritative; both sides
+ *  pin the shape in tests) and serves it VIRTUALLY until a host edits, at
+ *  which point it materializes copy-on-write. */
+exports.DEFAULT_CORE_STAGE = {
+    stageId: exports.CORE_STAGE_ID,
+    title: 'RSVP',
+    core: true,
+    settings: { presentation: 'stepped' },
+    elements: [
+        { kind: 'question', key: exports.ATTENDANCE_KEY, label: 'Will you attend?',
+            type: 'boolean', required: true, core: true },
+        { kind: 'question', key: 'hasFoodRestrictions',
+            label: 'Any food restrictions or allergies?', type: 'boolean' },
+        { kind: 'question', key: 'companions', label: 'Who is coming with you?',
+            type: 'repeatingGroup', addLabel: 'Add another guest',
+            subFields: [
+                { key: 'name', label: 'Name', type: 'text', required: true },
+                { key: 'allergies', label: 'Allergies', type: 'text' },
+            ] },
+    ],
+};
 const stagePresentation = (def) => { var _a; return (((_a = def.settings) === null || _a === void 0 ? void 0 : _a.presentation) === 'stepped' ? 'stepped' : 'flat'); };
 exports.stagePresentation = stagePresentation;
 const isDisplayBlock = (el) => el.kind === 'display';

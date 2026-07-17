@@ -151,3 +151,21 @@ describe('stagePresentation (cdk#1010)', () => {
         expect(stagePresentation({ settings: { presentation: 'sideways' } })).toBe('flat');
     });
 });
+
+// --- cdk#1012: the core-stage constants -------------------------------------
+import { ATTENDANCE_KEY, CORE_STAGE_ID, DEFAULT_CORE_STAGE } from './stages';
+
+describe('DEFAULT_CORE_STAGE (cdk#1012)', () => {
+    it('pins the canonical shape both runtimes carry (the lambda copy is authoritative)', () => {
+        expect(CORE_STAGE_ID).toBe('RSVP');
+        expect(DEFAULT_CORE_STAGE.stageId).toBe(CORE_STAGE_ID);
+        expect(DEFAULT_CORE_STAGE.core).toBe(true);
+        const [attend, food, party] = DEFAULT_CORE_STAGE.elements;
+        expect(attend).toMatchObject({ key: ATTENDANCE_KEY, type: 'boolean', required: true, core: true });
+        expect(food.key).toBe('hasFoodRestrictions');
+        expect(party).toMatchObject({ type: 'repeatingGroup', key: 'companions' });
+        expect(party.subFields?.map((sf) => sf.key)).toEqual(['name', 'allergies']);
+        // Identity stays with the shell (A6): no name/email questions here.
+        expect(DEFAULT_CORE_STAGE.elements.some((e) => /email|firstName|lastName/.test(e.key))).toBe(false);
+    });
+});
