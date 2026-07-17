@@ -42,6 +42,57 @@ export interface StageSubField {
 }
 /** cdk#1011: one entry of a repeating-group answer. */
 export type RepeatingGroupEntry = Record<string, string | number | boolean>;
+/** The reserved id of the core stage — RSVP itself, riding the engine. Fixed
+ *  so every reader uses a static path (stages.RSVP...); pre-reserved in the
+ *  lambda's stage-id denylist since long before this work. */
+export declare const CORE_STAGE_ID = "RSVP";
+/** The core question's fixed key: the platform's knowledge of who's coming.
+ *  Its key and boolean semantics are machine-fixed (undeletable, A11); its
+ *  wording is the host's. */
+export declare const ATTENDANCE_KEY = "isAttending";
+/** The canonical initial core-stage definition (epic #1008 bootstrap): the
+ *  attendance gate, dietary needs, and companions as a repeating group.
+ *  Name/email are IDENTITY, owned by the shell (A6) — deliberately not here.
+ *  The server carries the same literal (its copy is authoritative; both sides
+ *  pin the shape in tests) and serves it VIRTUALLY until a host edits, at
+ *  which point it materializes copy-on-write. */
+export declare const DEFAULT_CORE_STAGE: {
+    readonly stageId: "RSVP";
+    readonly title: "RSVP";
+    readonly core: true;
+    readonly settings: {
+        readonly presentation: "stepped";
+    };
+    readonly elements: readonly [{
+        readonly kind: "question";
+        readonly key: "isAttending";
+        readonly label: "Will you attend?";
+        readonly type: "boolean";
+        readonly required: true;
+        readonly core: true;
+    }, {
+        readonly kind: "question";
+        readonly key: "hasFoodRestrictions";
+        readonly label: "Any food restrictions or allergies?";
+        readonly type: "boolean";
+    }, {
+        readonly kind: "question";
+        readonly key: "companions";
+        readonly label: "Who is coming with you?";
+        readonly type: "repeatingGroup";
+        readonly addLabel: "Add another guest";
+        readonly subFields: readonly [{
+            readonly key: "name";
+            readonly label: "Name";
+            readonly type: "text";
+            readonly required: true;
+        }, {
+            readonly key: "allergies";
+            readonly label: "Allergies";
+            readonly type: "text";
+        }];
+    }];
+};
 export interface StageQuestion {
     /** Absent on pre-#976 configs; absent and 'question' mean the same. */
     kind?: 'question';
@@ -65,6 +116,9 @@ export interface StageQuestion {
     /** cdk#1011: repeatingGroup only — the add button's label, host-worded
      *  ("Add another guest"); absent = "Add another". */
     addLabel?: string;
+    /** cdk#1012: the core stage's attendance question — key and semantics
+     *  machine-fixed, wording host-editable, undeletable (A11). */
+    core?: boolean;
 }
 export type DisplayPresentation = 'line' | 'roster' | 'note';
 /**
