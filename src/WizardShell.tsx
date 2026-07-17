@@ -31,6 +31,12 @@ export interface WizardStep {
     content: React.ReactNode;
     /** false disables Next for this step. Absent = true. */
     canProceed?: boolean;
+    /** Click-time gate (cdk#1010, the CreateEventWizard idiom): called when
+     *  Next is pressed; return false to STAY — set your own error state
+     *  inside, the shell renders nothing. Next stays enabled, so validation
+     *  can explain itself on click instead of a mute disabled button. Absent
+     *  = advance freely. Composes with canProceed (checked first). */
+    validate?: () => boolean;
 }
 
 export const WizardShell = ({ steps, finish }: {
@@ -76,7 +82,10 @@ export const WizardShell = ({ steps, finish }: {
                     <Button
                         variant="contained"
                         disabled={step.canProceed === false}
-                        onClick={() => setIndex(i + 1)}
+                        onClick={() => {
+                            if (step.validate && !step.validate()) return;
+                            setIndex(i + 1);
+                        }}
                     >
                         Next
                     </Button>
