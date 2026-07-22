@@ -133,6 +133,12 @@ describe('resolvePrefillSource (mirror of the Lambda resolvers)', () => {
         expect(resolvePrefillSource('rsvp.partyNames', { rsvp: {} })).toBeUndefined();
         expect(resolvePrefillSource('rsvp.companionNames', undefined)).toBeUndefined();
     });
+
+    it('Object.prototype members are not resolvers (cdk#1285) — never a bare string as string[]', () => {
+        expect(resolvePrefillSource('toString', ROW)).toBeUndefined();
+        expect(resolvePrefillSource('hasOwnProperty', ROW)).toBeUndefined();
+        expect(resolvePrefillSource('constructor', ROW)).toBeUndefined();
+    });
 });
 
 describe('stageDriftKeys (mirror of the Lambda drift_keys)', () => {
@@ -152,6 +158,11 @@ describe('stageDriftKeys (mirror of the Lambda drift_keys)', () => {
         expect(stageDriftKeys(FIELDS, guest, { hotelName: 'Sea Breeze' })).toEqual([]);
         expect(stageDriftKeys(FIELDS, {}, { companions: ['Jordan'] })).toEqual([]);
         expect(stageDriftKeys(FIELDS, guest, undefined)).toEqual([]);
+    });
+
+    it('a defaultFrom naming an Object.prototype key is not a declared edge (cdk#1285)', () => {
+        const protoFields = [{ key: 'companions', defaultFrom: 'toString' }];
+        expect(stageDriftKeys(protoFields, guest, { companions: ['Jordan'] })).toEqual([]);
     });
 });
 
