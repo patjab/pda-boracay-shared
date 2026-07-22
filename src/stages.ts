@@ -303,16 +303,25 @@ export const guestDisplayName = (guest: GuestRowLike | undefined): string => {
         || str(guest?.rsvp?.name);
 };
 
-const RESOLVERS: Record<string, (guest: GuestRowLike | undefined) => string[]> = {
-    'rsvp.companionNames': (g) => companionEntries(g).map((e) => e.name),
-    'rsvp.companionsWithAllergies': (g) => companionEntries(g)
-        .map((e) => (e.allergies ? `${e.name} (${e.allergies})` : e.name)),
-    'rsvp.partyNames': (g) => {
-        const name = guestDisplayName(g);
-        const companions = companionEntries(g).map((e) => e.name);
-        return name ? [name, ...companions] : companions;
+// Prototype-less registry (cdk#1285): resolver ids are organizer-supplied
+// (`defaultFrom` may name any string the server allows), so a plain object
+// literal would make `'toString' in RESOLVERS` true and `RESOLVERS['toString']`
+// return an inherited FUNCTION — resolvePrefillSource would then hand back the
+// string "[object Object]" typed as string[]. Object.create(null) removes the
+// prototype, fixing the `in` guard and the indexed lookup at their one source.
+const RESOLVERS: Record<string, (guest: GuestRowLike | undefined) => string[]> = Object.assign(
+    Object.create(null) as Record<string, (guest: GuestRowLike | undefined) => string[]>,
+    {
+        'rsvp.companionNames': (g: GuestRowLike | undefined) => companionEntries(g).map((e) => e.name),
+        'rsvp.companionsWithAllergies': (g: GuestRowLike | undefined) => companionEntries(g)
+            .map((e) => (e.allergies ? `${e.name} (${e.allergies})` : e.name)),
+        'rsvp.partyNames': (g: GuestRowLike | undefined) => {
+            const name = guestDisplayName(g);
+            const companions = companionEntries(g).map((e) => e.name);
+            return name ? [name, ...companions] : companions;
+        },
     },
-};
+);
 
 /** One registry source's current value from the guest's own row, or undefined
  * when the id is unknown/bare or resolves to nothing. */
